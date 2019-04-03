@@ -3,12 +3,20 @@
         <title>Image Upload</title>
     </head>
     <body>
-        <h1>Upload an Image!</h1>
+        <h1>Upload an Image</h1>
         <div>
             <form action="/uploadImage" method="post" enctype="multipart/form-data">
                 <input type="file" name="imageToUpload" accept="image/*">
                 <br/>
                 <input type="submit" value="Upload">
+                <!-- <label for="caption">Caption</label> -->
+                
+                <!-- FOR PROJECT PART3 -->
+                <br/>
+
+                <textarea name="caption" placeholder="Caption" rows="3" cols="20"></textarea><br/>
+                <label for="allFollowers">All Followers?</label>
+                <input type="checkbox" name="allFollowers">
             </form>
         </div>
         {% if message %}

@@ -12,10 +12,10 @@ IMAGES_DIR = os.path.join(os.getcwd(), "images")
 
 connection = pymysql.connect(host="localhost",
                              user="root",
-                             password="",
-                             db="finsta",
+                             password="root",
+                             db="Finstagram",
                              charset="utf8mb4",
-                             port=3306,
+                             port=8889,
                              cursorclass=pymysql.cursors.DictCursor,
                              autocommit=True)
 
@@ -124,14 +124,23 @@ def upload_image():
         image_name = image_file.filename
         filepath = os.path.join(IMAGES_DIR, image_name)
         image_file.save(filepath)
-        query = "INSERT INTO photo (timestamp, filePath) VALUES (%s, %s)"
+
+        caption = request.form["caption"]
+        checkFollower = request.form.get('allFollowers')
+        if checkFollower:
+            allFollowers = True
+        else:
+            allFollowers = False
+
+        query = "INSERT INTO photo (timestamp, filePath, caption, allFollowers) VALUES (%s, %s, %s, %s)"
         with connection.cursor() as cursor:
-            cursor.execute(query, (time.strftime('%Y-%m-%d %H:%M:%S'), image_name))
+            cursor.execute(query, ( time.strftime('%Y-%m-%d %H:%M:%S'), image_name, caption, allFollowers))
         message = "Image has been successfully uploaded."
-        return render_template("upload.html", message=message)
+        return render_template("upload.html", message=message) 
     else:
         message = "Failed to upload image."
         return render_template("upload.html", message=message)
+    
 
 if __name__ == "__main__":
     if not os.path.isdir("images"):
