@@ -61,11 +61,17 @@ def images():
 
 @app.route("/groups", methods=["GET"])
 def groups():
-    query = "SELECT * FROM CloseFriendGroup"
-    with connection.cursor() as cursor:
-        cursor.execute(query)
-    data = cursor.fetchall()
-    return render_template("groups.html", groups=data, username=session["username"])
+    groupOwner = session["username"]
+    query1 = "SELECT * FROM CloseFriendGroup WHERE groupOwner=%s"
+    query2 = "SELECT * FROM Belong"
+    with connection.cursor() as cursor1:
+        cursor1.execute(query1, (groupOwner))
+    with connection.cursor() as cursor2:
+        cursor2.execute(query2)
+    data1 = cursor1.fetchall()   
+    data2 = cursor2.fetchall() 
+    print(data2)
+    return render_template("groups.html", groups=data1, users=data2, username=session["username"])
 
 
 @app.route("/image/<image_name>", methods=["GET"])
