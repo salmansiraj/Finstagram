@@ -6,6 +6,7 @@
         <h1>Upload an Image</h1>
         <div>
             <form action="/uploadImage" method="post" enctype="multipart/form-data">
+<<<<<<< HEAD
                 <input type="file" name="imageToUpload" accept="image/*">
                 <br/>
                 <input type="submit" value="Upload">
@@ -17,6 +18,13 @@
                 <textarea name="caption" placeholder="Caption" rows="3" cols="20"></textarea><br/>
                 <label for="allFollowers">All Followers?</label>
                 <input type="checkbox" name="allFollowers">
+=======
+                <input type="file" name="imageToUpload" accept="image/*"><br/>
+                <textarea name="caption" placeholder="Insert caption..."></textarea><br/>   
+                <label for="allFollowers"> All Followers </label>
+                <input type="checkbox" name="allFollowers"></br>
+                <input type="submit" value="Upload"></br>
+>>>>>>> 0958d00674bb61dff718f5cc35fce21396aa51df
             </form>
         </div>
         {% if message %}

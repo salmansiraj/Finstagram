@@ -1,0 +1,33 @@
+<html>
+    <head>
+        <title>CloseFriendsGroup</title>
+    </head>
+    <body>
+        <h1> Create a Close Friends Group! </h1>
+        <div>
+            <h2> Create a New Group </h2>
+            <form action="/createGroup" method="post">
+                <input type="text" name="groupName" placeholder="Group Name" required/><br/>
+                <input type="submit" value="Create">
+            </form><br/>
+            <h2> Add a Member to a Group </h2>
+            <form action="/addMember" method="post">
+                <input type="text" name="groupName" placeholder="Group Name" required/><br/>
+                <input type="text" name="newMember" placeholder="Username" required/><br/>
+                <input type="submit" value="Add to Group">
+            </form><br />
+            <h2> List of Owned Groups </h2>
+            <ul>
+                {% for group in groups %}
+                <li>
+                    {{group.groupName}}
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% if message %}
+            {{ message }}
+        {% endif %}<br/> 
+        <a href="/"> Go Back</a> 
+    </body>
+</html>

@@ -52,6 +52,17 @@ def images():
     data = cursor.fetchall()
     return render_template("images.html", images=data)
 
+
+@app.route("/groups", methods=["GET"])
+def groups():
+    groupOwner = session["username"]
+    query = "SELECT * FROM CloseFriendGroup WHERE groupOwner= %s"
+    with connection.cursor() as cursor:
+        cursor.execute(query, groupOwner)
+    data = cursor.fetchall()
+    return render_template("groups.html", groups=data, username=session["username"])
+
+
 @app.route("/image/<image_name>", methods=["GET"])
 def image(image_name):
     image_location = os.path.join(IMAGES_DIR, image_name)
@@ -65,6 +76,7 @@ def login():
 @app.route("/register", methods=["GET"])
 def register():
     return render_template("register.html")
+
 
 @app.route("/loginAuth", methods=["POST"])
 def loginAuth():
@@ -123,6 +135,7 @@ def upload_image():
         image_file = request.files.get("imageToUpload", "")
         image_name = image_file.filename
         filepath = os.path.join(IMAGES_DIR, image_name)
+<<<<<<< HEAD
         image_file.save(filepath)
 
         caption = request.form["caption"]
@@ -135,12 +148,55 @@ def upload_image():
         query = "INSERT INTO photo (timestamp, filePath, caption, allFollowers) VALUES (%s, %s, %s, %s)"
         with connection.cursor() as cursor:
             cursor.execute(query, ( time.strftime('%Y-%m-%d %H:%M:%S'), image_name, caption, allFollowers))
+=======
+        image_file.save(filepath)   
+        caption = request.form["caption"]
+        test = request.form.get("allFollowers")
+        if (test):
+            allFollowers = True
+        else:
+            allFollowers = False
+        query = "INSERT INTO photo (timestamp, filePath, caption, allFollowers) VALUES (%s, %s, %s, %i)"
+        with connection.cursor() as cursor:
+            cursor.execute(query, (time.strftime('%Y-%m-%d %H:%M:%S'), image_name, caption, allFollowers))
+>>>>>>> 0958d00674bb61dff718f5cc35fce21396aa51df
         message = "Image has been successfully uploaded."
         return render_template("upload.html", message=message) 
     else:
         message = "Failed to upload image."
         return render_template("upload.html", message=message)
     
+
+@app.route("/createGroup", methods=["POST"])
+def createGroup():
+    if request.form:
+        requestData = request.form
+        groupName = requestData["groupName"]
+        groupOwner = session["username"]
+        query = "INSERT INTO CloseFriendGroup (groupName, groupOwner) VALUES (%s, %s)"
+        with connection.cursor() as cursor:
+            cursor.execute(query, (groupName, groupOwner))
+        message = "CloseFriendGroup has been successfully uploaded."
+        return render_template("groups.html", message=message, username=session["username"])
+    else:
+        message = "Failed to create CloseFriendGroup."
+        return render_template("groups.html", message=message, username=session["username"])
+
+@app.route("/addMember", methods=["POST"])
+def addMember():
+    if request.form:
+        requestData = request.form
+        groupName = requestData["groupName"]
+        newMember = requestData["newMember"]
+        owner = session["username"]
+        query = "INSERT INTO Belong (groupName, groupOwner, username) VALUES (%s, %s, %s)"
+        with connection.cursor() as cursor:
+            cursor.execute(query, (groupName, owner, newMember))
+        message = newMember + " has successfully been added to " + groupName
+        return render_template("groups.html", message=message, username=session["username"])
+    else:
+        message = "Failed to add " + newMember + " to " + groupName
+        return render_template("groups.html", message=message, username=session["username"])
 
 if __name__ == "__main__":
     if not os.path.isdir("images"):
