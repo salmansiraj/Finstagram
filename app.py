@@ -46,19 +46,24 @@ def upload():
 @app.route("/images", methods=["GET"])
 @login_required
 def images():
-    query = "SELECT * FROM photo"
+    groupOwner = session["username"]
+    query = "SELECT DISTINCT(photoID), timestamp, allFollowers, caption, filePath FROM photo NATURAL JOIN CloseFriendGroup WHERE (groupOwner=%s)"
+    # Who are the types of people that can see your photos?
+        # Yourself (done)
+        # The people in the groups that you own ?
+        # The people who follow you ONLY IF allFollowers = True
+        # etc...
     with connection.cursor() as cursor:
-        cursor.execute(query)
+        cursor.execute(query, (groupOwner, groupOwner))
     data = cursor.fetchall()
     return render_template("images.html", images=data)
 
 
 @app.route("/groups", methods=["GET"])
 def groups():
-    groupOwner = session["username"]
-    query = "SELECT * FROM CloseFriendGroup WHERE groupOwner= %s"
+    query = "SELECT * FROM CloseFriendGroup"
     with connection.cursor() as cursor:
-        cursor.execute(query, groupOwner)
+        cursor.execute(query)
     data = cursor.fetchall()
     return render_template("groups.html", groups=data, username=session["username"])
 
@@ -137,19 +142,20 @@ def upload_image():
         filepath = os.path.join(IMAGES_DIR, image_name)
         image_file.save(filepath)   
         caption = request.form["caption"]
+        imageOwner = session["username"]
         test = request.form.get("allFollowers")
         if (test):
             allFollowers = True
         else:
             allFollowers = False
-        query = "INSERT INTO photo (timestamp, filePath, caption, allFollowers) VALUES (%s, %s, %s, %i)"
+        query = "INSERT INTO photo (timestamp, filePath, caption, allFollowers, photoOwner) VALUES (%s, %s, %s, %s, %s)"
         with connection.cursor() as cursor:
-            cursor.execute(query, (time.strftime('%Y-%m-%d %H:%M:%S'), image_name, caption, allFollowers))
+            cursor.execute(query, (time.strftime('%Y-%m-%d %H:%M:%S'), image_name, caption, allFollowers, imageOwner))
         message = "Image has been successfully uploaded."
-        return render_template("upload.html", message=message)
+        return render_template("upload.html", message=message, username=session["username"])
     else:
         message = "Failed to upload image."
-        return render_template("upload.html", message=message)
+        return render_template("upload.html", message=message, username=session["username"])
 
 @app.route("/createGroup", methods=["POST"])
 def createGroup():
@@ -173,10 +179,13 @@ def addMember():
         groupName = requestData["groupName"]
         newMember = requestData["newMember"]
         owner = session["username"]
-        query = "INSERT INTO Belong (groupName, groupOwner, username) VALUES (%s, %s, %s)"
-        with connection.cursor() as cursor:
-            cursor.execute(query, (groupName, owner, newMember))
-        message = newMember + " has successfully been added to " + groupName
+        try:
+            query = "INSERT INTO Belong (groupName, groupOwner, username) VALUES (%s, %s, %s)"
+            with connection.cursor() as cursor:
+                cursor.execute(query, (groupName, owner, newMember))
+            message = newMember + " has successfully been added to " + groupName
+        except:
+            message = "User is already in this closeFriendGroup..."
         return render_template("groups.html", message=message, username=session["username"])
     else:
         message = "Failed to add " + newMember + " to " + groupName
