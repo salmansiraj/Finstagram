@@ -8,6 +8,10 @@
             {% for image in images %}
 
             <img src="/image/{{image.filePath}}" width="300"/>
+            <p> {{image.timestamp}} </p>
+            <p> {{image.photoID}} </p>
+            <p> {{image.caption}} </p>
+
             {% endfor %}
         </div>
         <a href="/">Go back</a>
