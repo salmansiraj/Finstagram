@@ -1,23 +1,25 @@
 <html>
     <head>
-        <title>Notifs</title>
+        <title>Notifications</title>
     </head>
     <body>
         <h1>Notifications</h1>
         <div>
-             <!-- <form action="/followStatus" method="get|post" enctype="multipart/form-data">
+            <form action="/followStatus" method="post" enctype="multipart/form-data">
                 <ul>
                     <h2>Follow Requests</h2>
-                    <li>user1
-                        <label for="status">Yes?</label>
-                        <input type="radio" name="accept">
-                        <label for="status">No?</label>
-                        <input type="radio" name="decline">
-                    </li>
-                    <li>user2</li>
-                    <li>user3</li>
+
+                    {% for follower in followerRequests %}
+                    <li> 
+                        {{follower.followerUsername}} has requested to follow you!<br/>
+                        <input type="radio" name="status" value="accept"> Accept
+                        <input type="radio" name="status" value="decline"> Decline
+                        <input type="submit" name="submit_button">
+                    </li> 
+                    {% endfor %}
                 </ul>
-            </form> -->
+           </form>
+          
             <form action="/taggedStatus" method="post">
                     <h2>Tag Requests</h2>
                     {% for notification in taggedNotifications %}

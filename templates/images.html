@@ -7,10 +7,10 @@
         <div>
             {% for image in images %}
 
-            <img src="/image/{{image.filePath}}" width="300"/>
-            <p> {{image.timestamp}} </p>
-            <p> {{image.photoID}} </p>
-            <p> {{image.caption}} </p>
+            <img src="/image/{{image.filePath}}" width="300">
+            <p> Time: {{image.timestamp}} </p>
+            <p> photoID: {{image.photoID}} </p>
+            <p> Caption: {{image.caption}} </p>
 
             {% endfor %}
         </div>

@@ -10,8 +10,25 @@
                 <li><a href="/images">View Images</a></li>
                 <li><a href="/upload">Upload an Image</a></li>
                 <li><a href="/groups">Create a Group</a></li>
+                <li><a href="/notifications">Notifications</a></li>                
                 <li><a href="/logout">Logout</a></li>
             </ul>
+        
+        <form action="/follow" method="post" enctype="multipart/form-data">
+            <h2>Enter username to follow</h2>
+            <input type="text" name="followee">
+            <input type="submit" value="Follow" placeholder="Followee">
+        </form>
         </div>
+        {% if message %}
+            {{ message }}
+        {% endif %}
+
+        <h2>Requested Follows</h2>
+        <ul>
+        {% for follower in requests %} 
+            <li>{{follower.followerUsername}}</li>
+        {% endfor %}
+        </ul>
     </body>
 </html>
