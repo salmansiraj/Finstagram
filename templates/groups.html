@@ -21,6 +21,13 @@
                 {% for group in groups %}
                 <li>
                     {{group.groupName}}
+                    <ul>
+                        {% for user in users %}
+                        {% if user.groupName == group.groupName %}
+                            <li> {{ user.username }} </li>
+                        {% endif %}
+                        {% endfor %}
+                    </ul> 
                 </li>
                 {% endfor %}
             </ul>
