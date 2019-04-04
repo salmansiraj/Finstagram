@@ -219,9 +219,9 @@ def taggedStatus():
     if request.form:
         # print(request.form['status'])
         # print(request.form['submit_button'])
-        getQuery = "SELECT photoID FROM TAG WHERE (username=%s)"
+        getQuery = "SELECT photoID FROM TAG WHERE (username=%s AND acceptedTag=%s)"
         with connection.cursor() as cursor:
-            cursor.execute(getQuery, (session["username"]))
+            cursor.execute(getQuery, (session["username"], 0))
         data = cursor.fetchall()
         # print(data)
         currUser = session["username"]
