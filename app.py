@@ -43,18 +43,29 @@ def home():
 def upload():
     return render_template("upload.html")
 
+# @app.route("/images", methods=["GET"])
+# @login_required
+# def images():
+#     groupOwner = session["username"]
+
+#     query = "SELECT DISTINCT(photoID), timestamp, allFollowers, caption, filePath FROM photo NATURAL JOIN CloseFriendGroup WHERE (groupOwner=%s)"
+#     # Who are the types of people that can see your photos?
+#         # Yourself (done)
+#         # The people in the groups that you own ?
+#         # The people who follow you ONLY IF allFollowers = True
+#         # etc...
+#     with connection.cursor() as cursor:
+#         cursor.execute(query, (groupOwner, groupOwner))
+#     data = cursor.fetchall()
+#     return render_template("images.html", images=data)
+
+
 @app.route("/images", methods=["GET"])
 @login_required
 def images():
-    groupOwner = session["username"]
     query = "SELECT DISTINCT(photoID), timestamp, allFollowers, caption, filePath FROM photo NATURAL JOIN CloseFriendGroup WHERE (groupOwner=%s)"
-    # Who are the types of people that can see your photos?
-        # Yourself (done)
-        # The people in the groups that you own ?
-        # The people who follow you ONLY IF allFollowers = True
-        # etc...
     with connection.cursor() as cursor:
-        cursor.execute(query, (groupOwner, groupOwner))
+        cursor.execute(query, (session["username"]))
     data = cursor.fetchall()
     return render_template("images.html", images=data)
 
@@ -140,7 +151,7 @@ def logout():
     return redirect("/")
 
 
-@app.route("/uploadImage", methods=["POST"])
+@app.route("/uploadImage", methods=["GET", "POST"])
 @login_required
 def upload_image():
     if request.files:
@@ -150,27 +161,43 @@ def upload_image():
         image_file.save(filepath)   
         caption = request.form["caption"]
         imageOwner = session["username"]
-        # taggedUser = request.form["taggedUser"]
+        taggedUser = request.form["taggedUser"]
         test = request.form.get("allFollowers")
         if (test):
             allFollowers = True
         else:
             allFollowers = False
-        query = "INSERT INTO photo (timestamp, filePath, caption, allFollowers, photoOwner) VALUES (%s, %s, %s, %s, %s)"
+        
+        query1 = "INSERT INTO photo (timestamp, filePath, caption, allFollowers, photoOwner) VALUES (%s, %s, %s, %s, %s)"
+        query2 = "INSERT INTO Tag (username, photoID, acceptedTag) VALUES (%s, %s, %r)"
 
-        # If taggedUser is empty, then dont write a query2, else do the following query
-        # query2 = "INSERT INTO Tag (username, photoID, acceptedTag) VALUES (%s, %s, %s)"
-        # with connection.cursor() as cursor2:
-        #     cursor2.execute(query2, (params))
-        #                 image_name, caption, allFollowers, imageOwner))
+        with connection.cursor() as cursor1:
+            cursor1.execute(query1, (time.strftime('%Y-%m-%d %H:%M:%S'), image_name, caption, allFollowers, imageOwner))
 
-        with connection.cursor() as cursor:
-            cursor.execute(query, (time.strftime('%Y-%m-%d %H:%M:%S'), image_name, caption, allFollowers, imageOwner))
+        with connection.cursor() as cursor2:
+            cursor2.execute(query2, (taggedUser, cursor1.lastrowid, False))
+
         message = "Image has been successfully uploaded."
         return render_template("upload.html", message=message, username=session["username"])
     else:
         message = "Failed to upload image."
         return render_template("upload.html", message=message, username=session["username"])
+
+# @app.route("/taggedStatus", methods=["POST"])
+# def taggedStatus():
+#     if request.form:
+#         requestData = request.form 
+#         currStatus = request.form.get("status")
+#         currUser = session["username"]
+#         if (currStatus):
+#             currStatus = True
+#         else:
+#             currStatus = False
+#         query = "SELECT * FROM Tag WHERE username=%s"
+
+
+
+
 
 @app.route("/createGroup", methods=["POST"])
 def createGroup():
