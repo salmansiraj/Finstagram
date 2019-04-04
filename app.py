@@ -194,22 +194,27 @@ def upload_image():
         return render_template("upload.html", message=message, username=session["username"])
 
 
-# @app.route("/taggedStatus", methods=["GET", "POST"])
-# def taggedStatus():
-#     if request.form:
-#         # currStatus = request.form.get("status")
-#         # currUser = session["username"]
-#         # if (currStatus):
-#         #     currStatus = True
-#         # else:
-#         #     currStatus = False
-#         # query = "SELECT * FROM Tag WHERE username=%s"  
-#         # with connection.cursor() as cursor:
-#         #     cursor.execute(query, (currUser))
-#         # data = cursor.fetchall()
-
-#         # taggedNotifications = data,
-#     return render_template("notifications.html", username=session["username"])
+@app.route("/taggedStatus", methods=["POST"])
+@login_required
+def taggedStatus():
+    if request.form:
+        # print(request.form['status'])
+        # print(request.form['submit_button'])
+        getQuery = "SELECT photoID FROM TAG WHERE (username=%s)"
+        with connection.cursor() as cursor:
+            cursor.execute(getQuery, (session["username"]))
+        data = cursor.fetchall()
+        for photo in data:
+            currStatus = request.form.get("status")
+            currUser = session["username"]
+            if (currStatus == "accept"):
+                statusFlag = True
+            else:
+                statusFlag = False
+            query = "UPDATE Tag SET acceptedTag=%r WHERE (username=%s AND photoID=%s)"
+            with connection.cursor() as cursor:
+                cursor.execute(query, (statusFlag,currUser, photo['photoID']))
+    return render_template("notifications.html", username=session["username"])
         
 
 

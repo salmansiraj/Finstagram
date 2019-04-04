@@ -18,17 +18,16 @@
                     <li>user3</li>
                 </ul>
             </form> -->
-
-            <form action="/taggedStatus" method="get|post" enctype="multipart/form-data">
+            <form action="/taggedStatus" method="post">
                 <ul>
                     <h2>Tag Requests</h2>
-                    {% for notification in taggedNotifications%}
-                    <li> 
+                    {% for notification in taggedNotifications %}
+                    <li>
                         {{notification.photoOwner}} has tagged you in a photo ({{notification.photoID}})<br/>
-                        <label for="status"> Accept </label>
-                        <input type="radio" name="status">
-                        <label for="status"> Decline </label>
-                        <input type="radio" name="status">
+                                <input type="radio" name="status" value="accept"> Accept
+                                <input type="radio" name="status" value="decline"> Decline
+                                <input type="submit" name="submit_button">
+                            
                     </li> 
                     {% endfor %}
                 </ul>
