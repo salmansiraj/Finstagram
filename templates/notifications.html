@@ -1,0 +1,43 @@
+<html>
+    <head>
+        <title>Notifs</title>
+    </head>
+    <body>
+        <h1>Notifications</h1>
+        <div>
+             <!-- <form action="/followStatus" method="get|post" enctype="multipart/form-data">
+                <ul>
+                    <h2>Follow Requests</h2>
+                    <li>user1
+                        <label for="status">Yes?</label>
+                        <input type="radio" name="accept">
+                        <label for="status">No?</label>
+                        <input type="radio" name="decline">
+                    </li>
+                    <li>user2</li>
+                    <li>user3</li>
+                </ul>
+            </form> -->
+
+            <form action="/taggedStatus" method="get|post" enctype="multipart/form-data">
+                <ul>
+                    <h2>Tag Requests</h2>
+                    {% for notification in taggedNotifications%}
+                    <li> 
+                        {{notification.photoOwner}} has tagged you in a photo ({{notification.photoID}})<br/>
+                        <label for="status"> Accept </label>
+                        <input type="radio" name="status">
+                        <label for="status"> Decline </label>
+                        <input type="radio" name="status">
+                    </li> 
+                    {% endfor %}
+                </ul>
+            </form>
+        </div>
+        {% if message %}
+            {{ message }}
+        {% endif %}
+        <br/>
+        <a href="/">Go back</a>
+    </body>
+</html>

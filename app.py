@@ -43,6 +43,16 @@ def home():
 def upload():
     return render_template("upload.html")
 
+
+@app.route("/notifications", methods=["GET"])
+@login_required
+def notifications():
+    query = "SELECT * FROM Tag NATURAL JOIN Photo WHERE username=%s"
+    with connection.cursor() as cursor:
+        cursor.execute(query, (session["username"]))
+    data = cursor.fetchall()
+    return render_template("notifications.html", taggedNotifications=data)
+
 # @app.route("/images", methods=["GET"])
 # @login_required
 # def images():
@@ -183,19 +193,24 @@ def upload_image():
         message = "Failed to upload image."
         return render_template("upload.html", message=message, username=session["username"])
 
-# @app.route("/taggedStatus", methods=["POST"])
+
+# @app.route("/taggedStatus", methods=["GET", "POST"])
 # def taggedStatus():
 #     if request.form:
-#         requestData = request.form 
-#         currStatus = request.form.get("status")
-#         currUser = session["username"]
-#         if (currStatus):
-#             currStatus = True
-#         else:
-#             currStatus = False
-#         query = "SELECT * FROM Tag WHERE username=%s"
+#         # currStatus = request.form.get("status")
+#         # currUser = session["username"]
+#         # if (currStatus):
+#         #     currStatus = True
+#         # else:
+#         #     currStatus = False
+#         # query = "SELECT * FROM Tag WHERE username=%s"  
+#         # with connection.cursor() as cursor:
+#         #     cursor.execute(query, (currUser))
+#         # data = cursor.fetchall()
 
-
+#         # taggedNotifications = data,
+#     return render_template("notifications.html", username=session["username"])
+        
 
 
 
