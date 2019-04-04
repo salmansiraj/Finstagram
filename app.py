@@ -49,12 +49,39 @@ def home():
 def upload():
     return render_template("upload.html")
 
+
+@app.route("/notifications", methods=["GET"])
+@login_required
+def notifications():
+    query = "SELECT * FROM Tag NATURAL JOIN Photo WHERE (username=%s AND acceptedTag=%s)"
+    with connection.cursor() as cursor:
+        cursor.execute(query, (session["username"], 0))
+    data = cursor.fetchall()
+    return render_template("notifications.html", taggedNotifications=data)
+
+# @app.route("/images", methods=["GET"])
+# @login_required
+# def images():
+#     groupOwner = session["username"]
+
+#     query = "SELECT DISTINCT(photoID), timestamp, allFollowers, caption, filePath FROM photo NATURAL JOIN CloseFriendGroup WHERE (groupOwner=%s)"
+#     # Who are the types of people that can see your photos?
+#         # Yourself (done)
+#         # The people in the groups that you own ?
+#         # The people who follow you ONLY IF allFollowers = True
+#         # etc...
+#     with connection.cursor() as cursor:
+#         cursor.execute(query, (groupOwner, groupOwner))
+#     data = cursor.fetchall()
+#     return render_template("images.html", images=data)
+
+
 @app.route("/images", methods=["GET"])
 @login_required
 def images():
-    query = "SELECT * FROM photo"
+    query = "SELECT DISTINCT(photoID), timestamp, allFollowers, caption, filePath FROM photo NATURAL JOIN CloseFriendGroup WHERE (groupOwner=%s)"
     with connection.cursor() as cursor:
-        cursor.execute(query)
+        cursor.execute(query, (session["username"]))
     data = cursor.fetchall()
     return render_template("images.html", images=data)
 
@@ -148,7 +175,7 @@ def logout():
     return redirect("/")
 
 
-@app.route("/uploadImage", methods=["POST"])
+@app.route("/uploadImage", methods=["GET", "POST"])
 @login_required
 def upload_image():
     if request.files:
@@ -158,27 +185,70 @@ def upload_image():
         image_file.save(filepath)   
         caption = request.form["caption"]
         imageOwner = session["username"]
-        # taggedUser = request.form["taggedUser"]
+        taggedUser = request.form["taggedUser"]
         test = request.form.get("allFollowers")
         if (test):
             allFollowers = True
         else:
             allFollowers = False
-        query = "INSERT INTO photo (timestamp, filePath, caption, allFollowers, photoOwner) VALUES (%s, %s, %s, %s, %s)"
+        
+        query1 = "INSERT INTO photo (timestamp, filePath, caption, allFollowers, photoOwner) VALUES (%s, %s, %s, %s, %s)"
+        query2 = "INSERT INTO Tag (username, photoID, acceptedTag) VALUES (%s, %s, %r)"
 
-        # If taggedUser is empty, then dont write a query2, else do the following query
-        # query2 = "INSERT INTO Tag (username, photoID, acceptedTag) VALUES (%s, %s, %s)"
-        # with connection.cursor() as cursor2:
-        #     cursor2.execute(query2, (params))
-        #                 image_name, caption, allFollowers, imageOwner))
+        with connection.cursor() as cursor1:
+            cursor1.execute(query1, (time.strftime('%Y-%m-%d %H:%M:%S'), image_name, caption, allFollowers, imageOwner))
 
-        with connection.cursor() as cursor:
-            cursor.execute(query, (time.strftime('%Y-%m-%d %H:%M:%S'), image_name, caption, allFollowers, imageOwner))
+        with connection.cursor() as cursor2:
+            cursor2.execute(query2, (taggedUser, cursor1.lastrowid, False))
+
         message = "Image has been successfully uploaded."
         return render_template("upload.html", message=message, username=session["username"])
     else:
         message = "Failed to upload image."
         return render_template("upload.html", message=message, username=session["username"])
+
+
+@app.route("/taggedStatus", methods=["POST"])
+@login_required
+def taggedStatus():
+    if request.form:
+        # print(request.form['status'])
+        # print(request.form['submit_button'])
+        getQuery = "SELECT photoID FROM TAG WHERE (username=%s)"
+        with connection.cursor() as cursor:
+            cursor.execute(getQuery, (session["username"]))
+        data = cursor.fetchall()
+        # print(data)
+        currUser = session["username"]
+        for photo in data:
+            # print('status' + str(photo['photoID']))
+            currStatus = request.form.get('status' + str(photo['photoID']))
+            if (currStatus == "accept"):
+                statusFlag = True
+                queryT = "UPDATE Tag SET acceptedTag=%r WHERE (username=%s AND photoID=%s)"
+                with connection.cursor() as cursor1:
+                    cursor1.execute(queryT, (statusFlag, currUser, photo['photoID']))
+            else:
+                queryF = "DELETE FROM Tag WHERE (username=%s AND photoID=%s)"
+                with connection.cursor() as cursor2:
+                    cursor2.execute(queryF, (currUser, photo['photoID']))
+    return render_template("notifications.html", username=session["username"])
+        
+    #            for photo in data:
+    #         # print('status' + str(photo['photoID']))
+    #         currStatus = request.form.get('status' + str(photo['photoID']))
+    #         currUser = session["username"]
+    #         if (currStatus == "accept"):
+    #             statusFlag = True
+    #         else:
+    #             statusFlag = False
+    #         query = "UPDATE Tag SET acceptedTag=%r WHERE (username=%s AND photoID=%s)"
+    #         with connection.cursor() as cursor:
+    #             cursor.execute(query, (statusFlag, currUser, photo['photoID']))
+    # return render_template("notifications.html", username=session["username"])
+        
+
+
 
 @app.route("/createGroup", methods=["POST"])
 def createGroup():

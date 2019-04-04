@@ -1,44 +1,42 @@
 <html>
     <head>
-        <title>Notifs</title>
+        <title>Notifications</title>
     </head>
     <body>
-        <body>
-            <h1>Notifications</h1>
-            <div>
-                <form action="/followStatus" method="post" enctype="multipart/form-data">
-                    <ul>
-                        <h2>Follow Requests</h2>
+        <h1>Notifications</h1>
+        <div>
+            <form action="/followStatus" method="post" enctype="multipart/form-data">
+                <ul>
+                    <h2>Follow Requests</h2>
 
-                        {% for follower in followerRequests %}
-                        <li> 
-                            {{follower.followerUsername}} has requested to follow you!<br/>
-                            <input type="radio" name="status" value="accept"> Accept
-                            <input type="radio" name="status" value="decline"> Decline
-                            <input type="submit" name="submit_button">
-                        </li> 
-                        {% endfor %}
-                    </ul>
-                </form>
-                <!-- <form action="/taggedStatus" method="post">
-                    <ul>
-                        <h2>Tag Requests</h2>
-                        {% for notification in taggedNotifications %}
-                        <li> 
-                            {{notification.photoOwner}} has tagged you in a photo ({{notification.photoID}})<br/>
-                                <input type="radio" name="status" value="accept"> Accept
-                                <input type="radio" name="status" value="decline"> Decline
-                                <input type="submit" name="submit_button">
-                            
-                        </li> 
-                        {% endfor %}
-                    </ul>
-                </form> -->
-            </div>
-            {% if message %}
-                {{ message }}
-            {% endif %}
-            <br/>
-            <a href="/">Go back</a>
+                    {% for follower in followerRequests %}
+                    <li> 
+                        {{follower.followerUsername}} has requested to follow you!<br/>
+                        <input type="radio" name="status" value="accept"> Accept
+                        <input type="radio" name="status" value="decline"> Decline
+                        <input type="submit" name="submit_button">
+                    </li> 
+                    {% endfor %}
+                </ul>
+           </form>
+          
+            <form action="/taggedStatus" method="post">
+                    <h2>Tag Requests</h2>
+                    {% for notification in taggedNotifications %}
+                    <li>
+                        {{notification.photoOwner}} has tagged you in a photo ({{notification.photoID}})<br/>
+                                <input type="radio" name='status{{notification.photoID}}' value="accept"> Accept 
+                                <input type="radio" name='status{{notification.photoID}}' value="decline"> Decline 
+                    </li> 
+                    {% endfor %}
+                    <br/><input type="submit" name="submit_button">
+                </ul>
+            </form>
+        </div>
+        {% if message %}
+            {{ message }}
+        {% endif %}
+        <br/>
+        <a href="/">Go back</a>
     </body>
 </html>
