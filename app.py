@@ -135,36 +135,31 @@ def upload_image():
         image_file = request.files.get("imageToUpload", "")
         image_name = image_file.filename
         filepath = os.path.join(IMAGES_DIR, image_name)
-<<<<<<< HEAD
-        image_file.save(filepath)
-
-        caption = request.form["caption"]
-        checkFollower = request.form.get('allFollowers')
-        if checkFollower:
-            allFollowers = True
-        else:
-            allFollowers = False
-
-        query = "INSERT INTO photo (timestamp, filePath, caption, allFollowers) VALUES (%s, %s, %s, %s)"
-        with connection.cursor() as cursor:
-            cursor.execute(query, ( time.strftime('%Y-%m-%d %H:%M:%S'), image_name, caption, allFollowers))
-=======
         image_file.save(filepath)   
         caption = request.form["caption"]
-        test = request.form.get("allFollowers")
-        if (test):
+        imageOwner = session["username"]
+
+        checkFollowers = request.form.get("allFollowers")
+        if (checkFollowers):
             allFollowers = True
         else:
             allFollowers = False
-        query = "INSERT INTO photo (timestamp, filePath, caption, allFollowers) VALUES (%s, %s, %s, %i)"
+        query = "INSERT INTO photo (timestamp, filePath, caption, allFollowers, photoOwner) VALUES (%s, %s, %s, %s, %s)"
+
+        # If taggedUser is empty, then dont write a query2, else do the following query
+        # query2 = "INSERT INTO Tag (username, photoID, acceptedTag) VALUES (%s, %s, %s)"
+        # with connection.cursor() as cursor2:
+        #     cursor2.execute(query2, (params))
+        #                 image_name, caption, allFollowers, imageOwner))
+
         with connection.cursor() as cursor:
-            cursor.execute(query, (time.strftime('%Y-%m-%d %H:%M:%S'), image_name, caption, allFollowers))
->>>>>>> 0958d00674bb61dff718f5cc35fce21396aa51df
+            cursor.execute(query, (time.strftime('%Y-%m-%d %H:%M:%S'), image_name, caption, allFollowers, imageOwner))
         message = "Image has been successfully uploaded."
-        return render_template("upload.html", message=message) 
+        return render_template("upload.html", message=message, username=session["username"])
     else:
         message = "Failed to upload image."
-        return render_template("upload.html", message=message)
+        return render_template("upload.html", message=message, username=session["username"])
+
     
 
 @app.route("/createGroup", methods=["POST"])
@@ -176,7 +171,7 @@ def createGroup():
         query = "INSERT INTO CloseFriendGroup (groupName, groupOwner) VALUES (%s, %s)"
         with connection.cursor() as cursor:
             cursor.execute(query, (groupName, groupOwner))
-        message = "CloseFriendGroup has been successfully uploaded."
+        message = "CloseFriendGroup has been successfully created."
         return render_template("groups.html", message=message, username=session["username"])
     else:
         message = "Failed to create CloseFriendGroup."
