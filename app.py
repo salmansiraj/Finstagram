@@ -139,6 +139,7 @@ def logout():
     session.pop("username")
     return redirect("/")
 
+
 @app.route("/uploadImage", methods=["POST"])
 @login_required
 def upload_image():
@@ -149,12 +150,20 @@ def upload_image():
         image_file.save(filepath)   
         caption = request.form["caption"]
         imageOwner = session["username"]
+        # taggedUser = request.form["taggedUser"]
         test = request.form.get("allFollowers")
         if (test):
             allFollowers = True
         else:
             allFollowers = False
         query = "INSERT INTO photo (timestamp, filePath, caption, allFollowers, photoOwner) VALUES (%s, %s, %s, %s, %s)"
+
+        # If taggedUser is empty, then dont write a query2, else do the following query
+        # query2 = "INSERT INTO Tag (username, photoID, acceptedTag) VALUES (%s, %s, %s)"
+        # with connection.cursor() as cursor2:
+        #     cursor2.execute(query2, (params))
+        #                 image_name, caption, allFollowers, imageOwner))
+
         with connection.cursor() as cursor:
             cursor.execute(query, (time.strftime('%Y-%m-%d %H:%M:%S'), image_name, caption, allFollowers, imageOwner))
         message = "Image has been successfully uploaded."
