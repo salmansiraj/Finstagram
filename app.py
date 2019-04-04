@@ -47,9 +47,9 @@ def upload():
 @app.route("/notifications", methods=["GET"])
 @login_required
 def notifications():
-    query = "SELECT * FROM Tag NATURAL JOIN Photo WHERE username=%s"
+    query = "SELECT * FROM Tag NATURAL JOIN Photo WHERE (username=%s AND acceptedTag=%s)"
     with connection.cursor() as cursor:
-        cursor.execute(query, (session["username"]))
+        cursor.execute(query, (session["username"], 0))
     data = cursor.fetchall()
     return render_template("notifications.html", taggedNotifications=data)
 
@@ -204,19 +204,34 @@ def taggedStatus():
         with connection.cursor() as cursor:
             cursor.execute(getQuery, (session["username"]))
         data = cursor.fetchall()
+        # print(data)
+        currUser = session["username"]
         for photo in data:
             # print('status' + str(photo['photoID']))
             currStatus = request.form.get('status' + str(photo['photoID']))
-            currUser = session["username"]
-            # print(currStatus)
             if (currStatus == "accept"):
                 statusFlag = True
+                queryT = "UPDATE Tag SET acceptedTag=%r WHERE (username=%s AND photoID=%s)"
+                with connection.cursor() as cursor1:
+                    cursor1.execute(queryT, (statusFlag, currUser, photo['photoID']))
             else:
-                statusFlag = False
-            query = "UPDATE Tag SET acceptedTag=%r WHERE (username=%s AND photoID=%s)"
-            with connection.cursor() as cursor:
-                cursor.execute(query, (statusFlag, currUser, photo['photoID']))
+                queryF = "DELETE FROM Tag WHERE (username=%s AND photoID=%s)"
+                with connection.cursor() as cursor2:
+                    cursor2.execute(queryF, (currUser, photo['photoID']))
     return render_template("notifications.html", username=session["username"])
+        
+    #            for photo in data:
+    #         # print('status' + str(photo['photoID']))
+    #         currStatus = request.form.get('status' + str(photo['photoID']))
+    #         currUser = session["username"]
+    #         if (currStatus == "accept"):
+    #             statusFlag = True
+    #         else:
+    #             statusFlag = False
+    #         query = "UPDATE Tag SET acceptedTag=%r WHERE (username=%s AND photoID=%s)"
+    #         with connection.cursor() as cursor:
+    #             cursor.execute(query, (statusFlag, currUser, photo['photoID']))
+    # return render_template("notifications.html", username=session["username"])
         
 
 
