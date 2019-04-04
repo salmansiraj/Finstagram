@@ -36,7 +36,13 @@ def index():
 @app.route("/home")
 @login_required
 def home():
-    return render_template("home.html", username=session["username"])
+    query2 = "SELECT followerUsername FROM Follow WHERE acceptedFollow = %s AND followeeusername = %s"
+    followee = session["username"]
+    with connection.cursor() as cursor2:
+        cursor2.execute(query2, (0, followee))
+    requests = cursor2.fetchall()
+    print(requests)
+    return render_template("home.html", username=session["username"], requests=requests)
 
 @app.route("/upload", methods=["GET"])
 @login_required
@@ -46,15 +52,9 @@ def upload():
 @app.route("/images", methods=["GET"])
 @login_required
 def images():
-    groupOwner = session["username"]
-    query = "SELECT DISTINCT(photoID), timestamp, allFollowers, caption, filePath FROM photo NATURAL JOIN CloseFriendGroup WHERE (groupOwner=%s)"
-    # Who are the types of people that can see your photos?
-        # Yourself (done)
-        # The people in the groups that you own ?
-        # The people who follow you ONLY IF allFollowers = True
-        # etc...
+    query = "SELECT * FROM photo"
     with connection.cursor() as cursor:
-        cursor.execute(query, (groupOwner, groupOwner))
+        cursor.execute(query)
     data = cursor.fetchall()
     return render_template("images.html", images=data)
 
@@ -88,6 +88,14 @@ def login():
 def register():
     return render_template("register.html")
 
+@app.route("/notifications", methods=["GET"])
+def notifications():
+    getQuery = "SELECT followerUsername FROM Follow WHERE acceptedFollow=%s AND followeeUsername=%s"
+    followee = session["username"]
+    with connection.cursor() as cursor:
+        cursor.execute(getQuery, (0, followee))
+    followerRequests = cursor.fetchall()
+    return render_template("notifications.html", followerRequests=followerRequests)
 
 @app.route("/loginAuth", methods=["POST"])
 def loginAuth():
@@ -181,7 +189,7 @@ def createGroup():
         query = "INSERT INTO CloseFriendGroup (groupName, groupOwner) VALUES (%s, %s)"
         with connection.cursor() as cursor:
             cursor.execute(query, (groupName, groupOwner))
-        message = "CloseFriendGroup has been successfully uploaded."
+        message = "CloseFriendGroup has been successfully created."
         return render_template("groups.html", message=message, username=session["username"])
     else:
         message = "Failed to create CloseFriendGroup."
@@ -205,6 +213,44 @@ def addMember():
     else:
         message = "Failed to add " + newMember + " to " + groupName
         return render_template("groups.html", message=message, username=session["username"])
+
+@app.route("/follow", methods=["POST"])
+def follow():
+    if request.form:
+        requestData = request.form
+        followee = requestData["followee"]
+        follower = session["username"]
+        acceptedFollow = 0
+
+        try:
+            query = "INSERT INTO Follow (followerUsername, followeeUsername, acceptedFollow) VALUES (%s, %s, %s)"
+            with connection.cursor() as cursor:
+                if follower != followee:
+                    cursor.execute(query, (follower, followee, acceptedFollow))
+                    message = "Follower request sent to " + followee
+                else: 
+                    message = "You can't follow yourself!"
+        except:
+            message = "Failed to request follow for " + followee 
+        return render_template("home.html", message=message, username=session["username"])
+    else:
+        return render_template("home.html", username=session["username"])
+
+@app.route("/followStatus", methods=["POST"])
+@login_required
+def followStatus():
+    if request.form:
+        followee = session["username"]
+        currStatus = request.form["status"]
+
+        if (currStatus == "accept"):
+            followStatus = True
+        else:
+            followStatus = False
+        updateQuery = "UPDATE Follow SET acceptedFollow=%r WHERE followeeUsername=%s"
+        with connection.cursor() as cursor2:
+            cursor2.execute(updateQuery, (followStatus, followee))
+    return render_template("notifications.html", username=session["username"])
 
 if __name__ == "__main__":
     if not os.path.isdir("images"):
