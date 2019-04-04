@@ -208,14 +208,12 @@ def taggedStatus():
             # print('status' + str(photo['photoID']))
             currStatus = request.form.get('status' + str(photo['photoID']))
             currUser = session["username"]
+            # print(currStatus)
             if (currStatus == "accept"):
                 statusFlag = True
             else:
                 statusFlag = False
             query = "UPDATE Tag SET acceptedTag=%r WHERE (username=%s AND photoID=%s)"
-            print(statusFlag)
-            print(currUser)
-            print(photo['photoID'])
             with connection.cursor() as cursor:
                 cursor.execute(query, (statusFlag, currUser, photo['photoID']))
     return render_template("notifications.html", username=session["username"])
