@@ -53,11 +53,16 @@ def upload():
 @app.route("/notifications", methods=["GET"])
 @login_required
 def notifications():
+    getQuery = "SELECT followerUsername FROM Follow WHERE acceptedFollow=%s AND followeeUsername=%s"
+    followee = session["username"]
+    with connection.cursor() as cursor:
+        cursor.execute(getQuery, (0, followee))
+    followerRequests = cursor.fetchall()
     query = "SELECT * FROM Tag NATURAL JOIN Photo WHERE (username=%s AND acceptedTag=%s)"
     with connection.cursor() as cursor:
         cursor.execute(query, (session["username"], 0))
     data = cursor.fetchall()
-    return render_template("notifications.html", taggedNotifications=data)
+    return render_template("notifications.html", taggedNotifications=data, followerRequests=followerRequests)
 
 # @app.route("/images", methods=["GET"])
 # @login_required
@@ -115,14 +120,14 @@ def login():
 def register():
     return render_template("register.html")
 
-@app.route("/notifications", methods=["GET"])
-def notifications():
-    getQuery = "SELECT followerUsername FROM Follow WHERE acceptedFollow=%s AND followeeUsername=%s"
-    followee = session["username"]
-    with connection.cursor() as cursor:
-        cursor.execute(getQuery, (0, followee))
-    followerRequests = cursor.fetchall()
-    return render_template("notifications.html", followerRequests=followerRequests)
+# @app.route("/notifications", methods=["GET"])
+# def notifications():
+#     getQuery = "SELECT followerUsername FROM Follow WHERE acceptedFollow=%s AND followeeUsername=%s"
+#     followee = session["username"]
+#     with connection.cursor() as cursor:
+#         cursor.execute(getQuery, (0, followee))
+#     followerRequests = cursor.fetchall()
+#     return render_template("notifications.html", followerRequests=followerRequests)
 
 @app.route("/loginAuth", methods=["POST"])
 def loginAuth():

@@ -14,9 +14,9 @@
                         {{follower.followerUsername}} has requested to follow you!<br/>
                         <input type="radio" name="status" value="accept"> Accept
                         <input type="radio" name="status" value="decline"> Decline
-                        <input type="submit" name="submit_button">
                     </li> 
                     {% endfor %}
+                    <input type="submit" name="submit_button1">
                 </ul>
            </form>
           
@@ -29,7 +29,7 @@
                                 <input type="radio" name='status{{notification.photoID}}' value="decline"> Decline 
                     </li> 
                     {% endfor %}
-                    <br/><input type="submit" name="submit_button">
+                    <br/><input type="submit" name="submit_button2">
                 </ul>
             </form>
         </div>
