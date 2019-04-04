@@ -46,9 +46,15 @@ def upload():
 @app.route("/images", methods=["GET"])
 @login_required
 def images():
-    query = "SELECT * FROM photo"
+    groupOwner = session["username"]
+    query = "SELECT DISTINCT(photoID), timestamp, allFollowers, caption, filePath FROM photo NATURAL JOIN CloseFriendGroup WHERE (groupOwner=%s)"
+    # Who are the types of people that can see your photos?
+        # Yourself (done)
+        # The people in the groups that you own ?
+        # The people who follow you ONLY IF allFollowers = True
+        # etc...
     with connection.cursor() as cursor:
-        cursor.execute(query)
+        cursor.execute(query, (groupOwner, groupOwner))
     data = cursor.fetchall()
     return render_template("images.html", images=data)
 
@@ -56,11 +62,16 @@ def images():
 @app.route("/groups", methods=["GET"])
 def groups():
     groupOwner = session["username"]
-    query = "SELECT * FROM CloseFriendGroup WHERE groupOwner= %s"
-    with connection.cursor() as cursor:
-        cursor.execute(query, groupOwner)
-    data = cursor.fetchall()
-    return render_template("groups.html", groups=data, username=session["username"])
+    query1 = "SELECT * FROM CloseFriendGroup WHERE groupOwner=%s"
+    query2 = "SELECT * FROM Belong"
+    with connection.cursor() as cursor1:
+        cursor1.execute(query1, (groupOwner))
+    with connection.cursor() as cursor2:
+        cursor2.execute(query2)
+    data1 = cursor1.fetchall()   
+    data2 = cursor2.fetchall() 
+    print(data2)
+    return render_template("groups.html", groups=data1, users=data2, username=session["username"])
 
 
 @app.route("/image/<image_name>", methods=["GET"])
@@ -128,6 +139,7 @@ def logout():
     session.pop("username")
     return redirect("/")
 
+
 @app.route("/uploadImage", methods=["POST"])
 @login_required
 def upload_image():
@@ -138,9 +150,15 @@ def upload_image():
         image_file.save(filepath)   
         caption = request.form["caption"]
         imageOwner = session["username"]
+<<<<<<< HEAD
 
         checkFollowers = request.form.get("allFollowers")
         if (checkFollowers):
+=======
+        # taggedUser = request.form["taggedUser"]
+        test = request.form.get("allFollowers")
+        if (test):
+>>>>>>> 7545e6ce7178a752c2e8201a74d065e81a85b3b2
             allFollowers = True
         else:
             allFollowers = False
@@ -159,8 +177,11 @@ def upload_image():
     else:
         message = "Failed to upload image."
         return render_template("upload.html", message=message, username=session["username"])
+<<<<<<< HEAD
 
     
+=======
+>>>>>>> 7545e6ce7178a752c2e8201a74d065e81a85b3b2
 
 @app.route("/createGroup", methods=["POST"])
 def createGroup():
@@ -184,10 +205,13 @@ def addMember():
         groupName = requestData["groupName"]
         newMember = requestData["newMember"]
         owner = session["username"]
-        query = "INSERT INTO Belong (groupName, groupOwner, username) VALUES (%s, %s, %s)"
-        with connection.cursor() as cursor:
-            cursor.execute(query, (groupName, owner, newMember))
-        message = newMember + " has successfully been added to " + groupName
+        try:
+            query = "INSERT INTO Belong (groupName, groupOwner, username) VALUES (%s, %s, %s)"
+            with connection.cursor() as cursor:
+                cursor.execute(query, (groupName, owner, newMember))
+            message = newMember + " has successfully been added to " + groupName
+        except:
+            message = "User is already in this closeFriendGroup..."
         return render_template("groups.html", message=message, username=session["username"])
     else:
         message = "Failed to add " + newMember + " to " + groupName

@@ -3,24 +3,16 @@
         <title>Image Upload</title>
     </head>
     <body>
-        <h1>Upload an Image</h1>
+        <h1>Upload an Image!</h1>
         <div>
             <form action="/uploadImage" method="post" enctype="multipart/form-data">
                 <input type="file" name="imageToUpload" accept="image/*"><br/>
                 <textarea name="caption" placeholder="Insert caption..."></textarea><br/>   
                 <label for="allFollowers"> All Followers </label>
-<<<<<<< HEAD
-                <input type="checkbox" name="allFollowers"></br>
-                <input type="submit" value="Upload"></br>
-
-                <label for="tagged"><strong>Tag a user!</strong></label>
-                <input type="text" name="tagged">
-=======
                 <input type="checkbox" name="allFollowers"><br/>
                 <input type="submit" value="Upload"><br/>
                 <h2> Tag a user! </h2>
                 <input type="text" name="taggedUser"/><br/>
->>>>>>> 7545e6ce7178a752c2e8201a74d065e81a85b3b2
             </form>
         </div>
         {% if message %}
