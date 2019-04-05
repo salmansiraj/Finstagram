@@ -58,6 +58,7 @@ def notifications():
     with connection.cursor() as cursor:
         cursor.execute(getQuery, (0, followee))
     followerRequests = cursor.fetchall()
+    # print(followerRequests)
     query = "SELECT * FROM Tag NATURAL JOIN Photo WHERE (username=%s AND acceptedTag=%s)"
     with connection.cursor() as cursor:
         cursor.execute(query, (session["username"], 0))
@@ -100,13 +101,13 @@ def images():
 def groups():
     groupOwner = session["username"]
     query1 = "SELECT * FROM CloseFriendGroup WHERE groupOwner=%s"
-    query2 = "SELECT * FROM Belong"
+    query2 = "SELECT * FROM Belong WHERE groupOwner=%s"
     with connection.cursor() as cursor1:
         cursor1.execute(query1, (groupOwner))
     with connection.cursor() as cursor2:
         cursor2.execute(query2)
-    data1 = cursor1.fetchall()   
-    data2 = cursor2.fetchall() 
+    data1 = cursor1.fetchall()
+    data2 = cursor2.fetchall()
     print(data2)
     return render_template("groups.html", groups=data1, users=data2, username=session["username"])
 
@@ -125,14 +126,6 @@ def login():
 def register():
     return render_template("register.html")
 
-# @app.route("/notifications", methods=["GET"])
-# def notifications():
-#     getQuery = "SELECT followerUsername FROM Follow WHERE acceptedFollow=%s AND followeeUsername=%s"
-#     followee = session["username"]
-#     with connection.cursor() as cursor:
-#         cursor.execute(getQuery, (0, followee))
-#     followerRequests = cursor.fetchall()
-#     return render_template("notifications.html", followerRequests=followerRequests)
 
 @app.route("/loginAuth", methods=["POST"])
 def loginAuth():
@@ -159,20 +152,29 @@ def loginAuth():
 @app.route("/registerAuth", methods=["POST"])
 def registerAuth():
     if request.form:
+        image_file = request.files.get("profilePic", "")
+        # image_name = image_file.filename
+        # filepath = os.path.join(IMAGES_DIR, image_name)
+        # image_file.save(filepath)
         requestData = request.form
         username = requestData["username"]
         plaintextPasword = requestData["password"]
         hashedPassword = hashlib.sha256(plaintextPasword.encode("utf-8")).hexdigest()
         firstName = requestData["fname"]
         lastName = requestData["lname"]
-        
+        bio = requestData["bio"]
+        private = request.form.get("private")
+        if (private=='yes'):
+            private = 1
+        else:
+            private = 0
         try:
             with connection.cursor() as cursor:
-                query = "INSERT INTO person (username, password, fname, lname) VALUES (%s, %s, %s, %s)"
-                cursor.execute(query, (username, hashedPassword, firstName, lastName))
+                query = "INSERT INTO person (username, password, fname, lname, avatar, bio, isPrivate) VALUES (%s, %s, %s, %s, %s, %s, %r)"
+                cursor.execute(query, (username, hashedPassword, firstName, lastName, 'image_name', bio, private))
         except pymysql.err.IntegrityError:
             error = "%s is already taken." % (username)
-            return render_template('register.html', error=error)    
+            return render_template('register.html', error=error)
 
         return redirect(url_for("login"))
 
@@ -192,7 +194,7 @@ def upload_image():
         image_file = request.files.get("imageToUpload", "")
         image_name = image_file.filename
         filepath = os.path.join(IMAGES_DIR, image_name)
-        image_file.save(filepath)   
+        image_file.save(filepath)
         caption = request.form["caption"]
         imageOwner = session["username"]
         taggedUser = request.form["taggedUser"]
@@ -249,6 +251,7 @@ def taggedStatus():
     return render_template("notifications.html", username=session["username"])
 
 @app.route("/createGroup", methods=["POST"])
+@login_required
 def createGroup():
     if request.form:
         requestData = request.form
@@ -264,6 +267,7 @@ def createGroup():
         return render_template("groups.html", message=message, username=session["username"])
 
 @app.route("/addMember", methods=["POST"])
+@login_required
 def addMember():
     if request.form:
         requestData = request.form
@@ -284,6 +288,7 @@ def addMember():
 
 
 @app.route("/follow", methods=["POST"])
+@login_required
 def follow():
     if request.form:
         requestData = request.form
