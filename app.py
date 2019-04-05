@@ -95,7 +95,7 @@ def images():
 def groups():
     groupOwner = session["username"]
     query1 = "SELECT * FROM CloseFriendGroup WHERE groupOwner=%s"
-    query2 = "SELECT * FROM Belong"
+    query2 = "SELECT * FROM Belong WHERE groupOwner=%s"
     with connection.cursor() as cursor1:
         cursor1.execute(query1, (groupOwner))
     with connection.cursor() as cursor2:
