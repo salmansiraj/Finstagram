@@ -36,7 +36,7 @@ def index():
 @app.route("/home")
 @login_required
 def home():
-    query2 = "SELECT followerUsername FROM Follow WHERE acceptedFollow = %s AND followeeusername = %s"
+    query2 = "SELECT followerUsername FROM Follow WHERE acceptedFollow = %s AND followeeUsername = %s"
     followee = session["username"]
     with connection.cursor() as cursor2:
         cursor2.execute(query2, (0, followee))
@@ -58,27 +58,12 @@ def notifications():
     with connection.cursor() as cursor:
         cursor.execute(getQuery, (0, followee))
     followerRequests = cursor.fetchall()
+    # print(followerRequests)
     query = "SELECT * FROM Tag NATURAL JOIN Photo WHERE (username=%s AND acceptedTag=%s)"
     with connection.cursor() as cursor:
         cursor.execute(query, (session["username"], 0))
     data = cursor.fetchall()
     return render_template("notifications.html", taggedNotifications=data, followerRequests=followerRequests)
-
-# @app.route("/images", methods=["GET"])
-# @login_required
-# def images():
-#     groupOwner = session["username"]
-
-#     query = "SELECT DISTINCT(photoID), timestamp, allFollowers, caption, filePath FROM photo NATURAL JOIN CloseFriendGroup WHERE (groupOwner=%s)"
-#     # Who are the types of people that can see your photos?
-#         # Yourself (done)
-#         # The people in the groups that you own ?
-#         # The people who follow you ONLY IF allFollowers = True
-#         # etc...
-#     with connection.cursor() as cursor:
-#         cursor.execute(query, (groupOwner, groupOwner))
-#     data = cursor.fetchall()
-#     return render_template("images.html", images=data)
 
 
 @app.route("/images", methods=["GET"])
@@ -120,14 +105,6 @@ def login():
 def register():
     return render_template("register.html")
 
-# @app.route("/notifications", methods=["GET"])
-# def notifications():
-#     getQuery = "SELECT followerUsername FROM Follow WHERE acceptedFollow=%s AND followeeUsername=%s"
-#     followee = session["username"]
-#     with connection.cursor() as cursor:
-#         cursor.execute(getQuery, (0, followee))
-#     followerRequests = cursor.fetchall()
-#     return render_template("notifications.html", followerRequests=followerRequests)
 
 @app.route("/loginAuth", methods=["POST"])
 def loginAuth():
@@ -248,20 +225,6 @@ def taggedStatus():
                     cursor2.execute(queryF, (currUser, photo['photoID']))
     return render_template("notifications.html", username=session["username"])
 
-    #            for photo in data:
-    #         # print('status' + str(photo['photoID']))
-    #         currStatus = request.form.get('status' + str(photo['photoID']))
-    #         currUser = session["username"]
-    #         if (currStatus == "accept"):
-    #             statusFlag = True
-    #         else:
-    #             statusFlag = False
-    #         query = "UPDATE Tag SET acceptedTag=%r WHERE (username=%s AND photoID=%s)"
-    #         with connection.cursor() as cursor:
-    #             cursor.execute(query, (statusFlag, currUser, photo['photoID']))
-    # return render_template("notifications.html", username=session["username"])
-
-
 @app.route("/createGroup", methods=["POST"])
 @login_required
 def createGroup():
@@ -326,15 +289,24 @@ def follow():
 def followStatus():
     if request.form:
         followee = session["username"]
-        currStatus = request.form["status"]
 
-        if (currStatus == "accept"):
-            followStatus = True
-        else:
-            followStatus = False
-        updateQuery = "UPDATE Follow SET acceptedFollow=%r WHERE followeeUsername=%s"
-        with connection.cursor() as cursor2:
-            cursor2.execute(updateQuery, (followStatus, followee))
+        getQuery = "SELECT followerUsername FROM Follow WHERE (followeeUsername=%s AND acceptedfollow=%s)"
+        with connection.cursor() as cursor:
+            cursor.execute(getQuery, (followee, 0))
+        data = cursor.fetchall()
+        print(data)
+
+        for follower in data:
+            currStatus = request.form["status" + follower["followerUsername"]]
+            if currStatus == "accept":
+                updateQuery = "UPDATE Follow SET acceptedFollow=%s WHERE followeeUsername=%s"
+                with connection.cursor() as cursor:
+                    cursor.execute(updateQuery, (1, followee))
+            else:
+                deleteQ = "DELETE FROM Follow WHERE followerUsername=%s"
+                with connection.cursor() as cursor:
+                    cursor.execute(deleteQ, (follower["followerUsername"]))
+
     return render_template("notifications.html", username=session["username"])
 
 if __name__ == "__main__":
