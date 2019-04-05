@@ -36,12 +36,12 @@ def index():
 @app.route("/home")
 @login_required
 def home():
-    query2 = "SELECT followerUsername FROM Follow WHERE acceptedFollow = %s AND followeeusername = %s"
+    query2 = "SELECT followerUsername FROM Follow WHERE acceptedFollow = %s AND followeeUsername = %s"
     followee = session["username"]
     with connection.cursor() as cursor2:
         cursor2.execute(query2, (0, followee))
     requests = cursor2.fetchall()
-    print(requests)
+    # print(requests)
     return render_template("home.html", username=session["username"], requests=requests)
 
 @app.route("/upload", methods=["GET"])
@@ -64,32 +64,37 @@ def notifications():
     data = cursor.fetchall()
     return render_template("notifications.html", taggedNotifications=data, followerRequests=followerRequests)
 
-# @app.route("/images", methods=["GET"])
-# @login_required
-# def images():
-#     groupOwner = session["username"]
 
-#     query = "SELECT DISTINCT(photoID), timestamp, allFollowers, caption, filePath FROM photo NATURAL JOIN CloseFriendGroup WHERE (groupOwner=%s)"
-#     # Who are the types of people that can see your photos?
-#         # Yourself (done)
-#         # The people in the groups that you own ?
-#         # The people who follow you ONLY IF allFollowers = True
-#         # etc...
-#     with connection.cursor() as cursor:
-#         cursor.execute(query, (groupOwner, groupOwner))
-#     data = cursor.fetchall()
-#     return render_template("images.html", images=data)
-
+# AllFollowers: True
+#     - (Your followers) + (all members in groups you own can see) + (YOU)
+# AllFollowers: False
+#     - (YOU) + (all members in groups you own can see)
 
 @app.route("/images", methods=["GET"])
 @login_required
 def images():
-    query = "SELECT DISTINCT(photoID), timestamp, allFollowers, caption, filePath FROM photo NATURAL JOIN CloseFriendGroup WHERE (groupOwner=%s)"
-    with connection.cursor() as cursor:
-        cursor.execute(query, (session["username"]))
-    data = cursor.fetchall()
-    return render_template("images.html", images=data)
+    queryGroups = "SELECT * FROM Belong JOIN Photo ON Belong.groupOwner=Photo.photoOwner"
+    queryFollow = "SELECT * FROM Follow NATURAL JOIN Photo WHERE (FollowerUsername=%s AND acceptedfollow=%s AND allFollowers=%s AND photoOwner!=%s)"
+    querySelf = "SELECT * FROM Photo WHERE photoOwner=%s"
 
+    with connection.cursor() as cursor1:
+        cursor1.execute(queryGroups)
+
+    with connection.cursor() as cursor2:
+        cursor2.execute(queryFollow, (session["username"], True, True, session["username"]))
+
+    with connection.cursor() as cursor3:
+        cursor3.execute(querySelf, (session["username"]))
+
+    groupData = cursor1.fetchall()
+    followData = cursor2.fetchall()
+    selfData = cursor3.fetchall()
+    print(groupData)
+    print("----")
+    print(followData)
+    print("----")
+    print(selfData)
+    return render_template("images.html", groupData=groupData, followData=followData, selfData=selfData)
 
 @app.route("/groups", methods=["GET"])
 def groups():
@@ -191,20 +196,24 @@ def upload_image():
         caption = request.form["caption"]
         imageOwner = session["username"]
         taggedUser = request.form["taggedUser"]
+        if (len(taggedUser) != 0):
+            taggedUser = taggedUser.split(',')
+        else:
+            taggedUser = ""
         test = request.form.get("allFollowers")
-        if (test):
+        if (test == "on"):
             allFollowers = True
         else:
             allFollowers = False
-        
         query1 = "INSERT INTO photo (timestamp, filePath, caption, allFollowers, photoOwner) VALUES (%s, %s, %s, %s, %s)"
-        query2 = "INSERT INTO Tag (username, photoID, acceptedTag) VALUES (%s, %s, %r)"
 
         with connection.cursor() as cursor1:
             cursor1.execute(query1, (time.strftime('%Y-%m-%d %H:%M:%S'), image_name, caption, allFollowers, imageOwner))
-
-        with connection.cursor() as cursor2:
-            cursor2.execute(query2, (taggedUser, cursor1.lastrowid, False))
+        if (taggedUser != ""):
+            with connection.cursor() as cursor2:
+                query2 = "INSERT INTO Tag (username, photoID, acceptedTag) VALUES (%s, %s, %r)"
+                for taggee in taggedUser:
+                    cursor2.execute(query2, (taggee, cursor1.lastrowid, False))
 
         message = "Image has been successfully uploaded."
         return render_template("upload.html", message=message, username=session["username"])
@@ -238,22 +247,6 @@ def taggedStatus():
                 with connection.cursor() as cursor2:
                     cursor2.execute(queryF, (currUser, photo['photoID']))
     return render_template("notifications.html", username=session["username"])
-        
-    #            for photo in data:
-    #         # print('status' + str(photo['photoID']))
-    #         currStatus = request.form.get('status' + str(photo['photoID']))
-    #         currUser = session["username"]
-    #         if (currStatus == "accept"):
-    #             statusFlag = True
-    #         else:
-    #             statusFlag = False
-    #         query = "UPDATE Tag SET acceptedTag=%r WHERE (username=%s AND photoID=%s)"
-    #         with connection.cursor() as cursor:
-    #             cursor.execute(query, (statusFlag, currUser, photo['photoID']))
-    # return render_template("notifications.html", username=session["username"])
-        
-
-
 
 @app.route("/createGroup", methods=["POST"])
 def createGroup():
@@ -289,6 +282,7 @@ def addMember():
         message = "Failed to add " + newMember + " to " + groupName
         return render_template("groups.html", message=message, username=session["username"])
 
+
 @app.route("/follow", methods=["POST"])
 def follow():
     if request.form:
@@ -303,29 +297,38 @@ def follow():
                 if follower != followee:
                     cursor.execute(query, (follower, followee, acceptedFollow))
                     message = "Follower request sent to " + followee
-                else: 
+                else:
                     message = "You can't follow yourself!"
         except:
-            message = "Failed to request follow for " + followee 
+            message = "Failed to request follow for " + followee
         return render_template("home.html", message=message, username=session["username"])
     else:
         return render_template("home.html", username=session["username"])
+
 
 @app.route("/followStatus", methods=["POST"])
 @login_required
 def followStatus():
     if request.form:
         followee = session["username"]
-        currStatus = request.form["status"]
+        getQuery = "SELECT followerUsername FROM Follow WHERE (followeeUsername=%s AND acceptedfollow=%s)"
+        with connection.cursor() as cursor:
+            cursor.execute(getQuery, (followee, 0))
+        data = cursor.fetchall()
+        # print(data)
 
-        if (currStatus == "accept"):
-            followStatus = True
-        else:
-            followStatus = False
-        updateQuery = "UPDATE Follow SET acceptedFollow=%r WHERE followeeUsername=%s"
-        with connection.cursor() as cursor2:
-            cursor2.execute(updateQuery, (followStatus, followee))
+        for follower in data:
+            currStatus = request.form["status" + follower["followerUsername"]]
+            if currStatus == "accept":
+                updateQuery = "UPDATE Follow SET acceptedFollow=%s WHERE followeeUsername=%s"
+                with connection.cursor() as cursor:
+                    cursor.execute(updateQuery, (1, followee))
+            else:
+                deleteQ = "DELETE FROM Follow WHERE followerUsername=%s"
+                with connection.cursor() as cursor:
+                    cursor.execute(deleteQ, (follower["followerUsername"]))
     return render_template("notifications.html", username=session["username"])
+
 
 if __name__ == "__main__":
     if not os.path.isdir("images"):

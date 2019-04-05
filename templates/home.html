@@ -6,7 +6,6 @@
         <h1>Hello, {{ username }}!</h1>
         <div>
             <ul>
-                <li><a href="/notifications">Notifications</a></li>
                 <li><a href="/images">View Images</a></li>
                 <li><a href="/upload">Upload an Image</a></li>
                 <li><a href="/groups">Create a Group</a></li>
@@ -24,7 +23,7 @@
             {{ message }}
         {% endif %}
 
-        <h2>Requested Follows</h2>
+        <h2>People that requested to follow you</h2>
         <ul>
         {% for follower in requests %} 
             <li>{{follower.followerUsername}}</li>
