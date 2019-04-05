@@ -244,11 +244,14 @@ def taggedStatus():
                 queryT = "UPDATE Tag SET acceptedTag=%r WHERE (username=%s AND photoID=%s)"
                 with connection.cursor() as cursor1:
                     cursor1.execute(queryT, (statusFlag, currUser, photo['photoID']))
-            else:
+            elif (currStatus == "decline"):
                 queryF = "DELETE FROM Tag WHERE (username=%s AND photoID=%s)"
                 with connection.cursor() as cursor2:
                     cursor2.execute(queryF, (currUser, photo['photoID']))
-    return render_template("notifications.html", username=session["username"])
+            else:
+                continue
+    # return render_template(redirect('/notifications'), username=session["username"])
+    return redirect(url_for('notifications'))
 
 @app.route("/createGroup", methods=["POST"])
 @login_required
