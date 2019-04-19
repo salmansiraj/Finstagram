@@ -79,12 +79,12 @@ def images():
 @app.route("/groups", methods=["GET"])
 def groups():
     groupOwner = session["username"]
-    query1 = "SELECT * FROM CloseFriendGroup WHERE groupOwner=%s"
-    query2 = "SELECT * FROM Belong"
+    query1 = "SELECT * FROM CloseFriendGroup WHERE groupOwner=%s "
+    query2 = "SELECT * FROM Belong WHERE groupOwner=%s"
     with connection.cursor() as cursor1:
         cursor1.execute(query1, (groupOwner))
     with connection.cursor() as cursor2:
-        cursor2.execute(query2)
+        cursor2.execute(query2, (groupOwner))
     data1 = cursor1.fetchall()   
     data2 = cursor2.fetchall() 
     print(data2)
