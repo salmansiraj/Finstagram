@@ -6,7 +6,7 @@ import pymysql.cursors
 from functools import wraps
 import time
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder='templates/static')
 app.secret_key = "super secret key"
 IMAGES_DIR = os.path.join(os.getcwd(), "images")
 
