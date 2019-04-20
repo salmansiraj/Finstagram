@@ -71,31 +71,38 @@ def notifications():
 # AllFollowers: False
 #     - (YOU) + (all members in groups you own can see)
 
-@app.route("/images", methods=["GET"])
+@app.route("/images", methods=["GET", "POST"])
 @login_required
 def images():
-    queryGroups = "SELECT * FROM Belong JOIN Photo ON Belong.groupOwner=Photo.photoOwner"
-    queryFollow = "SELECT * FROM Follow NATURAL JOIN Photo WHERE (FollowerUsername=%s AND acceptedfollow=%s AND allFollowers=%s AND photoOwner!=%s)"
-    querySelf = "SELECT * FROM Photo WHERE photoOwner=%s"
+    user = session["username"]
+    cursor = connection.cursor()
+    queryFollow = "CREATE VIEW myfollows AS SELECT DISTINCT filePath, photoID, timestamp, caption, photoOwner FROM Photo JOIN Follow ON (Photo.photoOwner=followeeUsername) WHERE followerUsername=%s AND allFollowers=%s"
+    cursor.execute(queryFollow, (user, 1))
+    cursor.close()
 
-    with connection.cursor() as cursor1:
-        cursor1.execute(queryGroups)
+    cursor = connection.cursor()
+    queryGroups = "CREATE VIEW mygroups AS SELECT DISTINCT filePath, photoID, timestamp, caption, photoOwner FROM Photo NATURAL JOIN Belong WHERE Belong.username=%s"
+    cursor.execute(queryGroups, (user))
+    cursor.close()
 
-    with connection.cursor() as cursor2:
-        cursor2.execute(queryFollow, (session["username"], True, True, session["username"]))
+    cursor = connection.cursor()
+    querySelf = "CREATE VIEW myphotos AS SELECT filePath, photoID, timestamp, caption, photoOwner FROM Photo WHERE photoOwner=%s"
+    cursor.execute(querySelf, (user))
+    cursor.close()
 
-    with connection.cursor() as cursor3:
-        cursor3.execute(querySelf, (session["username"]))
+    cursor = connection.cursor()
+    totalQuery = "SELECT DISTINCT photoID, timestamp, filePath, caption, photoOwner FROM mygroups UNION (SELECT photoID,timestamp,filePath, caption, photoOwner FROM myphotos) UNION (SELECT photoID,timestamp,filePath, caption, photoOwner FROM myfollows) ORDER BY timestamp DESC"
+    cursor.execute(totalQuery)
+    data = cursor.fetchall()
+    print(data)
+    cursor.close()
 
-    groupData = cursor1.fetchall()
-    followData = cursor2.fetchall()
-    selfData = cursor3.fetchall()
-    print(groupData)
-    print("----")
-    print(followData)
-    print("----")
-    print(selfData)
-    return render_template("images.html", groupData=groupData, followData=followData, selfData=selfData)
+    cursor = connection.cursor()
+    query = "DROP VIEW myphotos, mygroups, myfollows"
+    cursor.execute(query)
+    cursor.close()
+
+    return render_template("images.html", photos=data)
 
 @app.route("/groups", methods=["GET"])
 def groups():
@@ -105,10 +112,10 @@ def groups():
     with connection.cursor() as cursor1:
         cursor1.execute(query1, (groupOwner))
     with connection.cursor() as cursor2:
-        cursor2.execute(query2)
+        cursor2.execute(query2, (groupOwner))
     data1 = cursor1.fetchall()
     data2 = cursor2.fetchall()
-    print(data2)
+    # print(data2)
     return render_template("groups.html", groups=data1, users=data2, username=session["username"])
 
 
@@ -250,7 +257,6 @@ def taggedStatus():
                     cursor2.execute(queryF, (currUser, photo['photoID']))
             else:
                 continue
-    # return render_template(redirect('/notifications'), username=session["username"])
     return redirect(url_for('notifications'))
 
 @app.route("/createGroup", methods=["POST"])
