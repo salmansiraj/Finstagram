@@ -8,12 +8,26 @@
     <link href="https://fonts.googleapis.com/css?family=Fira+Sans" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css?family=Cookie" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css?family=Roboto+Condensed" rel="stylesheet">
-    <link rel="stylesheet" type="text/css" href="css/login.css">
+    <link rel="stylesheet" type="text/css" href="static/login.css">
 
     <title>Login</title>
 </head>
 
 <body>
+
+    <nav class="navbar navbar-expand-sm navbar-dark fixed-top py-0">
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+            <ul class="navbar-nav ml-auto">
+                <li class="nav-item">
+                    <a class="nav-link" href="/register">register</a>
+                </li>
+            </ul>
+        </div>
+    </nav>
     <section class="hero loginReg" id="login">
         <div class="loginBox">
             <form action="/loginAuth" method="post"> 
@@ -29,6 +43,9 @@
                 </div>
                 <button type="submit" value="Login" class="btn btn-outline-dark">SIGN IN</button>
             </form>
+            {% if error %}
+            {{ error }}
+            {% endif %}
         </div>
     </section>
 <!-- 
@@ -42,9 +59,7 @@
             <input type="submit" value="Login">
         </form>
     </div> -->
-    {% if error %}
-        {{ error }}
-    {% endif %}
+
 </body>
 </html>
 

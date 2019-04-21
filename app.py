@@ -273,6 +273,38 @@ def follow():
     else:
         return render_template("home.html", username=session["username"])
 
+@app.route("/followers", methods=["GET"])
+def followers():
+    followee = session["username"]
+    query1 = "SELECT followerUsername FROM Follow WHERE followeeUsername=%s AND acceptedFollow=%s"
+    query2 = "SELECT followeeUsername FROM Follow where followerUsername=%s AND acceptedFollow=%s"
+    with connection.cursor() as cursor1:
+        cursor1.execute(query1, (followee, 1))
+    with connection.cursor() as cursor2:
+        cursor2.execute(query2, (followee, 1))
+    followers = cursor1.fetchall()
+    following = cursor2.fetchall()
+
+    # print(following)
+    return render_template("followers.html", followers=followers, following=following, username=session["username"])
+
+@app.route("/unfollow", methods=["POST"])
+def unfollow():
+    if request.form:
+        requestData = request.form
+        followee = requestData["unfollowee"]
+        follower = session["username"]
+        try:
+            deleteQuery = "DELETE FROM Follow WHERE followerUsername=%s AND followeeUsername=%s"
+            with connection.cursor() as cursor:
+                cursor.execute(deleteQuery, (follower, followee))
+                message = "Unfollowed " + followee
+        except:
+            message = "Failed to unfollow " + followee 
+        return render_template("followers.html", message=message, username=session["username"])
+    else:
+        return render_template("followers.html", message=message, username=session["username"])
+
 @app.route("/followStatus", methods=["POST"])
 @login_required
 def followStatus():
@@ -283,8 +315,7 @@ def followStatus():
         with connection.cursor() as cursor:
             cursor.execute(getQuery, (followee, 0))
         data = cursor.fetchall()
-        print(data)
-
+        # print(data)
         for follower in data:
             currStatus = request.form["status" + follower["followerUsername"]]
             if currStatus == "accept":
