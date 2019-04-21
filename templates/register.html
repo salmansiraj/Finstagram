@@ -8,6 +8,7 @@
         <link rel="stylesheet" type="text/css" href="static/login.css">
     </head>
     <body>
+<<<<<<< HEAD
         <nav class="navbar navbar-expand-sm navbar-dark fixed-top py-0">
             <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
@@ -47,6 +48,44 @@
                 </form>
             </div>
             {% if error %}
+=======
+        <h1>Register</h1>
+        <div>
+            <form action="/registerAuth" method="post">
+                <p>
+                  Username:
+                <input type="text" name="username" placeholder="Username" required/>
+                <br/></p>
+                <p>
+                  Password:
+                <input type="password" name="password" placeholder="Password" required/>
+                <br/></p>
+                <p>
+                  First Name:
+                <input type="text" name="fname" placeholder="First Name" required/>
+                <br/></p>
+                <p>
+                  Last Name:
+                <input type="text" name="lname" placeholder="Last Name" required/>
+                <br/></p>
+                <p>
+                  Avatar:
+                <input type="file" name="profilePic" accept="image/*"><br/>
+                </p>
+                <p>
+                  Bio:
+                <textarea name="bio" placeholder="Insert bio..."></textarea>
+                <br/></p>
+
+                <p>
+                  Private: <input type="radio" name="private" value="yes"> Yes
+                           <input type="radio" name="private" value="no"> No
+                <br/></p>
+                <input type="submit" value="Register">
+            </form>
+        </div>
+        {% if error %}
+>>>>>>> 502d6dbfdf16e14dea28135735bc582998de65d1
             {{ error }}
             {% endif %}
         </section>
