@@ -5,15 +5,16 @@
     <body>
         <h1>Image Gallery</h1>
         <div>
-            {% for image in images %}
-
-            <img src="/image/{{image.filePath}}" width="300">
-            <p> Time: {{image.timestamp}} </p>
-            <p> photoID: {{image.photoID}} </p>
-            <p> Caption: {{image.caption}} </p>
-
+            {% for image in photos %}
+                <img src="/image/{{image.filePath}}" width='300'><br>
+                <h4> {{image.photoOwner}}, {{image.photoID}} </h4>
+                <p> {{image.caption}} </p>
             {% endfor %}
         </div>
+        
+        {% if message %}
+            {{ message }}
+        {% endif %}
         <a href="/">Go back</a>
     </body>
 </html>

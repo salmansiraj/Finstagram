@@ -25,8 +25,8 @@
                     {% for notification in taggedNotifications %}
                     <li>
                         {{notification.photoOwner}} has tagged you in a photo ({{notification.photoID}})<br/>
-                        <input type="radio" name='status{{notification.photoID}}' value="accept"> Accept 
-                        <input type="radio" name='status{{notification.photoID}}' value="decline"> Decline 
+                        <input type="radio" name="status{{notification.photoID}}" value="accept"> Accept 
+                        <input type="radio" name="status{{notification.photoID}}" value="decline"> Decline 
                     </li> 
                     {% endfor %}
                     <br/><input type="submit" name="submit_button2">
