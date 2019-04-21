@@ -176,14 +176,19 @@ def registerAuth():
         hashedPassword = hashlib.sha256(plaintextPasword.encode("utf-8")).hexdigest()
         firstName = requestData["fname"]
         lastName = requestData["lname"]
-        
+        bio = requestData["bio"]
+        private = requestData["private"]
+        if (private=="yes"):
+            private = 1
+        else:
+            private = 0
         try:
             with connection.cursor() as cursor:
                 query = "INSERT INTO person (username, password, fname, lname, avatar, bio, isPrivate) VALUES (%s, %s, %s, %s, %s, %s, %r)"
                 cursor.execute(query, (username, hashedPassword, firstName, lastName, image_name, bio, private))
         except pymysql.err.IntegrityError:
             error = "%s is already taken." % (username)
-            return render_template('register.html', error=error)    
+            return render_template('register.html', error=error)
 
         return redirect(url_for("login"))
 
@@ -203,7 +208,7 @@ def upload_image():
         image_file = request.files.get("imageToUpload", "")
         image_name = image_file.filename
         filepath = os.path.join(IMAGES_DIR, image_name)
-        image_file.save(filepath)   
+        image_file.save(filepath)
         caption = request.form["caption"]
         imageOwner = session["username"]
         taggedUser = request.form["taggedUser"]
@@ -312,10 +317,10 @@ def follow():
                 if follower != followee:
                     cursor.execute(query, (follower, followee, acceptedFollow))
                     message = "Follower request sent to " + followee
-                else: 
+                else:
                     message = "You can't follow yourself!"
         except:
-            message = "Failed to request follow for " + followee 
+            message = "Failed to request follow for " + followee
         return render_template("home.html", message=message, username=session["username"])
     else:
         return render_template("home.html", username=session["username"])
@@ -332,7 +337,7 @@ def unfollow():
                 cursor.execute(deleteQuery, (unfollowee, follower))
         except:
             # error message still not right -- will leave like this for now
-            message = "Unfollowed " + unfollowee            
+            message = "Unfollowed " + unfollowee
         return render_template("followers.html", message=message, username=session["username"])
     else:
         return render_template("followers.html", message=message, username=session["username"])
