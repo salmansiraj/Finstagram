@@ -10,16 +10,16 @@
                     <h2>Follow Requests</h2>
 
                     {% for follower in followerRequests %}
-                    <li> 
+                    <li>
                         {{follower.followerUsername}} has requested to follow you!<br/>
                         <input type="radio" name="status{{follower.followerUsername}}" value="accept"> Accept
                         <input type="radio" name="status{{follower.followerUsername}}" value="decline"> Decline
-                    </li> 
+                    </li>
                     {% endfor %}
                     <input type="submit" name="submit_button1">
                 </ul>
            </form>
-          
+
             <form action="/taggedStatus" method="post">
                     <h2>Tag Requests</h2>
                     {% for notification in taggedNotifications %}

@@ -6,7 +6,7 @@ import pymysql.cursors
 from functools import wraps
 import time
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder='templates/static')
 app.secret_key = "super secret key"
 IMAGES_DIR = os.path.join(os.getcwd(), "images")
 
@@ -208,30 +208,26 @@ def loginAuth():
 
 @app.route("/registerAuth", methods=["POST"])
 def registerAuth():
-    if request.form:
+    if request.files:
         image_file = request.files.get("profilePic", "")
-        # image_name = image_file.filename
-        # filepath = os.path.join(IMAGES_DIR, image_name)
-        # image_file.save(filepath)
+        image_name = image_file.filename
+        filepath = os.path.join(IMAGES_DIR, image_name)
+        image_file.save(filepath)
+
         requestData = request.form
         username = requestData["username"]
         plaintextPasword = requestData["password"]
         hashedPassword = hashlib.sha256(plaintextPasword.encode("utf-8")).hexdigest()
         firstName = requestData["fname"]
         lastName = requestData["lname"]
-        bio = requestData["bio"]
-        private = request.form.get("private")
-        if (private=='yes'):
-            private = 1
-        else:
-            private = 0
+        
         try:
             with connection.cursor() as cursor:
                 query = "INSERT INTO person (username, password, fname, lname, avatar, bio, isPrivate) VALUES (%s, %s, %s, %s, %s, %s, %r)"
-                cursor.execute(query, (username, hashedPassword, firstName, lastName, 'image_name', bio, private))
+                cursor.execute(query, (username, hashedPassword, firstName, lastName, image_name, bio, private))
         except pymysql.err.IntegrityError:
             error = "%s is already taken." % (username)
-            return render_template('register.html', error=error)
+            return render_template('register.html', error=error)    
 
         return redirect(url_for("login"))
 
@@ -251,7 +247,7 @@ def upload_image():
         image_file = request.files.get("imageToUpload", "")
         image_name = image_file.filename
         filepath = os.path.join(IMAGES_DIR, image_name)
-        image_file.save(filepath)
+        image_file.save(filepath)   
         caption = request.form["caption"]
         imageOwner = session["username"]
         taggedUser = request.form["taggedUser"]
@@ -274,11 +270,12 @@ def upload_image():
                 for taggee in taggedUser:
                     cursor2.execute(query2, (taggee, cursor1.lastrowid, False))
 
+
         message = "Image has been successfully uploaded."
         return render_template("upload.html", message=message, username=session["username"])
-    else:
-        message = "Failed to upload image."
-        return render_template("upload.html", message=message, username=session["username"])
+
+    error = "Failed to upload image."
+    return render_template("upload.html", error=error, username=session["username"])
 
 
 @app.route("/taggedStatus", methods=["POST"])
@@ -309,8 +306,8 @@ def taggedStatus():
                 continue
     return redirect(url_for('notifications'))
 
+
 @app.route("/createGroup", methods=["POST"])
-@login_required
 def createGroup():
     if request.form:
         requestData = request.form
@@ -326,7 +323,6 @@ def createGroup():
         return render_template("groups.html", message=message, username=session["username"])
 
 @app.route("/addMember", methods=["POST"])
-@login_required
 def addMember():
     if request.form:
         requestData = request.form
@@ -347,7 +343,6 @@ def addMember():
 
 
 @app.route("/follow", methods=["POST"])
-@login_required
 def follow():
     if request.form:
         requestData = request.form
@@ -361,13 +356,45 @@ def follow():
                 if follower != followee:
                     cursor.execute(query, (follower, followee, acceptedFollow))
                     message = "Follower request sent to " + followee
-                else:
+                else: 
                     message = "You can't follow yourself!"
         except:
-            message = "Failed to request follow for " + followee
+            message = "Failed to request follow for " + followee 
         return render_template("home.html", message=message, username=session["username"])
     else:
         return render_template("home.html", username=session["username"])
+
+@app.route("/unfollow", methods=["POST"])
+def unfollow():
+    if request.form:
+        requestData = request.form
+        unfollowee = requestData["unfollowee"]
+        follower = session["username"]
+        try:
+            deleteQuery = "DELETE FROM Follow WHERE followeeUsername=%s AND followerUsername=%s"
+            with connection.cursor() as cursor:
+                cursor.execute(deleteQuery, (unfollowee, follower))
+        except:
+            # error message still not right -- will leave like this for now
+            message = "Unfollowed " + unfollowee            
+        return render_template("followers.html", message=message, username=session["username"])
+    else:
+        return render_template("followers.html", message=message, username=session["username"])
+
+@app.route("/followers", methods=["GET"])
+def followers():
+    user = session["username"]
+    query1 = "SELECT followerUsername FROM Follow WHERE followeeUsername=%s AND acceptedfollow=%s"
+    query2 = "SELECT followeeUsername FROM Follow WHERE followerUsername=%s AND acceptedfollow=%s"
+    with connection.cursor() as cursor1:
+        cursor1.execute(query1, (user, 1))
+    with connection.cursor() as cursor2:
+        cursor2.execute(query2, (user, 1))
+
+    followers = cursor1.fetchall()
+    following = cursor2.fetchall()
+    # print(data2)
+    return render_template("followers.html", followers=followers, following=following, username=session["username"])
 
 
 @app.route("/followStatus", methods=["POST"])
@@ -380,7 +407,6 @@ def followStatus():
             cursor.execute(getQuery, (followee, 0))
         data = cursor.fetchall()
         # print(data)
-
         for follower in data:
             currStatus = request.form["status" + follower["followerUsername"]]
             if currStatus == "accept":
