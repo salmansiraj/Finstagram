@@ -119,15 +119,9 @@ def groups():
         cursor1.execute(query1, (groupOwner))
     with connection.cursor() as cursor2:
         cursor2.execute(query2, (groupOwner))
-<<<<<<< HEAD
-    data1 = cursor1.fetchall()   
-    data2 = cursor2.fetchall() 
-    print(data2)
-=======
     data1 = cursor1.fetchall()
     data2 = cursor2.fetchall()
     # print(data2)
->>>>>>> ec23370c3e938f2b3e7e30e84301907b841ddc2a
     return render_template("groups.html", groups=data1, users=data2, username=session["username"])
 
 
@@ -217,10 +211,6 @@ def upload_image():
             allFollowers = True
         else:
             allFollowers = False
-<<<<<<< HEAD
-        
-=======
->>>>>>> ec23370c3e938f2b3e7e30e84301907b841ddc2a
         query1 = "INSERT INTO photo (timestamp, filePath, caption, allFollowers, photoOwner) VALUES (%s, %s, %s, %s, %s)"
 
         with connection.cursor() as cursor1:
@@ -324,41 +314,38 @@ def follow():
     else:
         return render_template("home.html", username=session["username"])
 
-<<<<<<< HEAD
-@app.route("/followers", methods=["GET"])
-def followers():
-    followee = session["username"]
-    query1 = "SELECT followerUsername FROM Follow WHERE followeeUsername=%s AND acceptedFollow=%s"
-    query2 = "SELECT followeeUsername FROM Follow WHERE followerUsername=%s AND acceptedFollow=%s"
-    with connection.cursor() as cursor1:
-        cursor1.execute(query1, (followee, 1))
-    with connection.cursor() as cursor2:
-        cursor2.execute(query2, (followee, 1))
-    followers = cursor1.fetchall()
-    following = cursor2.fetchall()
-
-    # print(following)
-    return render_template("followers.html", followers=followers, following=following, username=session["username"])
-
 @app.route("/unfollow", methods=["POST"])
 def unfollow():
     if request.form:
         requestData = request.form
-        followee = requestData["unfollowee"]
+        unfollowee = requestData["unfollowee"]
         follower = session["username"]
-
         try:
-            deleteQuery = "DELETE FROM Follow WHERE followerUsername=%s AND followeeUsername=%s"
+            deleteQuery = "DELETE FROM Follow WHERE followeeUsername=%s AND followerUsername=%s"
             with connection.cursor() as cursor:
-                cursor.execute(deleteQuery, (follower, followee))
-                message = "Unfollowed " + followee
+                cursor.execute(deleteQuery, (unfollowee, follower))
         except:
-            message = "You don't follow " + followee 
-        return render_template("followers.html", message=message)
+            # error message still not right -- will leave like this for now
+            message = "Unfollowed " + unfollowee            
+        return render_template("followers.html", message=message, username=session["username"])
     else:
         return render_template("followers.html", message=message, username=session["username"])
-=======
->>>>>>> ec23370c3e938f2b3e7e30e84301907b841ddc2a
+
+@app.route("/followers", methods=["GET"])
+def followers():
+    user = session["username"]
+    query1 = "SELECT followerUsername FROM Follow WHERE followeeUsername=%s AND acceptedfollow=%s"
+    query2 = "SELECT followeeUsername FROM Follow WHERE followerUsername=%s AND acceptedfollow=%s"
+    with connection.cursor() as cursor1:
+        cursor1.execute(query1, (user, 1))
+    with connection.cursor() as cursor2:
+        cursor2.execute(query2, (user, 1))
+
+    followers = cursor1.fetchall()
+    following = cursor2.fetchall()
+    # print(data2)
+    return render_template("followers.html", followers=followers, following=following, username=session["username"])
+
 
 @app.route("/followStatus", methods=["POST"])
 @login_required
@@ -370,10 +357,6 @@ def followStatus():
             cursor.execute(getQuery, (followee, 0))
         data = cursor.fetchall()
         # print(data)
-<<<<<<< HEAD
-=======
-
->>>>>>> ec23370c3e938f2b3e7e30e84301907b841ddc2a
         for follower in data:
             currStatus = request.form["status" + follower["followerUsername"]]
             if currStatus == "accept":

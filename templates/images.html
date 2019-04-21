@@ -1,29 +1,4 @@
 <html>
-<<<<<<< HEAD
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <link rel="stylesheet" type="text/css" href="/static/imageLayout.css">
-
-    <title>Finstagram</title>
-</head>
-
-<body>
-    <h1>Image Gallery</h1>
-    <div>
-        {% for image in images %}
-
-        <img src="/image/{{image.filePath}}" width="300">
-        <p> Time: {{image.timestamp}} </p>
-        <p> photoID: {{image.photoID}} </p>
-        <p> Caption: {{image.caption}} </p>
-
-        {% endfor %}
-    </div>
-    <a href="/">Go back</a>
-</body>
-=======
     <head>
         <title>Finstagram</title>
     </head>
@@ -36,7 +11,9 @@
                 <img src="/image/{{image.filePath}}" width='300'><br>
                 <h4> {{image.photoOwner}}, {{image.photoID}} </h4>
                 <p> {{image.caption}} </p>
+                {% endfor %}
             {% endfor %}
+            
         </div>
         
         {% if message %}
@@ -44,5 +21,4 @@
         {% endif %}
         <a href="/">Go back</a>
     </body>
->>>>>>> ec23370c3e938f2b3e7e30e84301907b841ddc2a
 </html>
