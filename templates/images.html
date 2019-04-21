@@ -1,4 +1,5 @@
 <html>
+<<<<<<< HEAD
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -22,4 +23,26 @@
     </div>
     <a href="/">Go back</a>
 </body>
+=======
+    <head>
+        <title>Finstagram</title>
+    </head>
+    <body>
+        <h1>Image Gallery</h1>
+        <div>
+            {% for image in photos %}
+                {% for taggedImage in taggedUsers %}
+                    {% %}
+                <img src="/image/{{image.filePath}}" width='300'><br>
+                <h4> {{image.photoOwner}}, {{image.photoID}} </h4>
+                <p> {{image.caption}} </p>
+            {% endfor %}
+        </div>
+        
+        {% if message %}
+            {{ message }}
+        {% endif %}
+        <a href="/">Go back</a>
+    </body>
+>>>>>>> ec23370c3e938f2b3e7e30e84301907b841ddc2a
 </html>
