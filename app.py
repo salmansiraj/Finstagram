@@ -79,24 +79,14 @@ def images():
 @app.route("/groups", methods=["GET"])
 def groups():
     groupOwner = session["username"]
-<<<<<<< HEAD
-    query1 = "SELECT * FROM CloseFriendGroup WHERE groupOwner=%s "
-=======
     query1 = "SELECT * FROM CloseFriendGroup WHERE groupOwner=%s"
->>>>>>> 502d6dbfdf16e14dea28135735bc582998de65d1
     query2 = "SELECT * FROM Belong WHERE groupOwner=%s"
     with connection.cursor() as cursor1:
         cursor1.execute(query1, (groupOwner))
     with connection.cursor() as cursor2:
-<<<<<<< HEAD
         cursor2.execute(query2, (groupOwner))
     data1 = cursor1.fetchall()   
     data2 = cursor2.fetchall() 
-=======
-        cursor2.execute(query2)
-    data1 = cursor1.fetchall()
-    data2 = cursor2.fetchall()
->>>>>>> 502d6dbfdf16e14dea28135735bc582998de65d1
     print(data2)
     return render_template("groups.html", groups=data1, users=data2, username=session["username"])
 
@@ -141,29 +131,20 @@ def loginAuth():
 @app.route("/registerAuth", methods=["POST"])
 def registerAuth():
     if request.form:
-        image_file = request.files.get("profilePic", "")
-        # image_name = image_file.filename
-        # filepath = os.path.join(IMAGES_DIR, image_name)
-        # image_file.save(filepath)
         requestData = request.form
         username = requestData["username"]
         plaintextPasword = requestData["password"]
         hashedPassword = hashlib.sha256(plaintextPasword.encode("utf-8")).hexdigest()
         firstName = requestData["fname"]
         lastName = requestData["lname"]
-        bio = requestData["bio"]
-        private = request.form.get("private")
-        if (private=='yes'):
-            private = 1
-        else:
-            private = 0
+        
         try:
             with connection.cursor() as cursor:
-                query = "INSERT INTO person (username, password, fname, lname, avatar, bio, isPrivate) VALUES (%s, %s, %s, %s, %s, %s, %r)"
-                cursor.execute(query, (username, hashedPassword, firstName, lastName, 'image_name', bio, private))
+                query = "INSERT INTO person (username, password, fname, lname) VALUES (%s, %s, %s, %s)"
+                cursor.execute(query, (username, hashedPassword, firstName, lastName))
         except pymysql.err.IntegrityError:
             error = "%s is already taken." % (username)
-            return render_template('register.html', error=error)
+            return render_template('register.html', error=error)    
 
         return redirect(url_for("login"))
 
@@ -183,7 +164,7 @@ def upload_image():
         image_file = request.files.get("imageToUpload", "")
         image_name = image_file.filename
         filepath = os.path.join(IMAGES_DIR, image_name)
-        image_file.save(filepath)
+        image_file.save(filepath)   
         caption = request.form["caption"]
         imageOwner = session["username"]
         taggedUser = request.form["taggedUser"]
@@ -192,7 +173,7 @@ def upload_image():
             allFollowers = True
         else:
             allFollowers = False
-
+        
         query1 = "INSERT INTO photo (timestamp, filePath, caption, allFollowers, photoOwner) VALUES (%s, %s, %s, %s, %s)"
         query2 = "INSERT INTO Tag (username, photoID, acceptedTag) VALUES (%s, %s, %r)"
 
@@ -235,8 +216,8 @@ def taggedStatus():
                     cursor2.execute(queryF, (currUser, photo['photoID']))
     return render_template("notifications.html", username=session["username"])
 
+
 @app.route("/createGroup", methods=["POST"])
-@login_required
 def createGroup():
     if request.form:
         requestData = request.form
@@ -252,7 +233,6 @@ def createGroup():
         return render_template("groups.html", message=message, username=session["username"])
 
 @app.route("/addMember", methods=["POST"])
-@login_required
 def addMember():
     if request.form:
         requestData = request.form
@@ -272,7 +252,6 @@ def addMember():
         return render_template("groups.html", message=message, username=session["username"])
 
 @app.route("/follow", methods=["POST"])
-@login_required
 def follow():
     if request.form:
         requestData = request.form
@@ -286,10 +265,10 @@ def follow():
                 if follower != followee:
                     cursor.execute(query, (follower, followee, acceptedFollow))
                     message = "Follower request sent to " + followee
-                else:
+                else: 
                     message = "You can't follow yourself!"
         except:
-            message = "Failed to request follow for " + followee
+            message = "Failed to request follow for " + followee 
         return render_template("home.html", message=message, username=session["username"])
     else:
         return render_template("home.html", username=session["username"])
@@ -298,7 +277,7 @@ def follow():
 def followers():
     followee = session["username"]
     query1 = "SELECT followerUsername FROM Follow WHERE followeeUsername=%s AND acceptedFollow=%s"
-    query2 = "SELECT followeeUsername FROM Follow where followerUsername=%s AND acceptedFollow=%s"
+    query2 = "SELECT followeeUsername FROM Follow WHERE followerUsername=%s AND acceptedFollow=%s"
     with connection.cursor() as cursor1:
         cursor1.execute(query1, (followee, 1))
     with connection.cursor() as cursor2:
@@ -315,14 +294,15 @@ def unfollow():
         requestData = request.form
         followee = requestData["unfollowee"]
         follower = session["username"]
+
         try:
             deleteQuery = "DELETE FROM Follow WHERE followerUsername=%s AND followeeUsername=%s"
             with connection.cursor() as cursor:
                 cursor.execute(deleteQuery, (follower, followee))
                 message = "Unfollowed " + followee
         except:
-            message = "Failed to unfollow " + followee 
-        return render_template("followers.html", message=message, username=session["username"])
+            message = "You don't follow " + followee 
+        return render_template("followers.html", message=message)
     else:
         return render_template("followers.html", message=message, username=session["username"])
 

@@ -1,54 +1,24 @@
 <html>
     <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta http-equiv="X-UA-Compatible" content="ie=edge">
         <title>Register</title>
         <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
         <link href="https://fonts.googleapis.com/css?family=Fira+Sans" rel="stylesheet">
         <link href="https://fonts.googleapis.com/css?family=Cookie" rel="stylesheet">
         <link href="https://fonts.googleapis.com/css?family=Roboto+Condensed" rel="stylesheet">
-        <link rel="stylesheet" type="text/css" href="static/login.css">
+        <link rel="stylesheet" type="text/css" href="static/register.css">
     </head>
     <body>
-<<<<<<< HEAD
-        <nav class="navbar navbar-expand-sm navbar-dark fixed-top py-0">
-            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            
-            <div class="collapse navbar-collapse" id="navbarSupportedContent">
-                <ul class="navbar-nav ml-auto">
-                    <li class="nav-item">
-                        <a class="nav-link" href="/login">login</a>
-                    </li>
-                </ul>
-            </div>
-        </nav>
 
-        <section class="hero loginReg" id="register">
-            <div class="loginBox">
-                <form action="/registerAuth" method="post">
-                    <div class="form-row">
-                        <div class="form-group col-md-6">
-                            <label for="inputUsername4">FIRST NAME</label>
-                            <input type="text" class="form-control" name="fname" placeholder="First Name" required/>
-                        </div>
-                        <div class="form-group col-md-6">
-                            <label for="inputUsername4">LAST NAME</label>
-                            <input type="text" class="form-control" name="lname" placeholder="Last Name" required/>
-                        </div>
-                        <div class="form-group col-md-6">
-                            <label for="inputUsername4">USERNAME</label>
-                            <input type="text" class="form-control" name="username" placeholder="Username" required/>
-                        </div>
-                        <div class="form-group col-md-6">
-                            <label for="inputPassword4">PASSWORD</label>
-                            <input type="password" class="form-control" name="password" placeholder="Password" required/>
-                        </div>
-                    </div>
-                    <button type="submit" value="Register" class="btn btn-outline-light">REGISTER</button>
-                </form>
-            </div>
-            {% if error %}
-=======
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+            <ul class="navbar-nav ml-auto">
+                <li class="nav-item">
+                    <a class="nav-link" href="/login">login</a>
+                </li>
+            </ul>
+        </div>
         <h1>Register</h1>
         <div>
             <form action="/registerAuth" method="post">
@@ -85,7 +55,6 @@
             </form>
         </div>
         {% if error %}
->>>>>>> 502d6dbfdf16e14dea28135735bc582998de65d1
             {{ error }}
             {% endif %}
         </section>
