@@ -6,6 +6,8 @@
         <h1>Image Gallery</h1>
         <div>
             {% for image in photos %}
+                {% for taggedImage in taggedUsers %}
+                    {% %}
                 <img src="/image/{{image.filePath}}" width='300'><br>
                 <h4> {{image.photoOwner}}, {{image.photoID}} </h4>
                 <p> {{image.caption}} </p>
