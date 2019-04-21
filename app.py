@@ -94,7 +94,7 @@ def images():
     totalQuery = "SELECT DISTINCT photoID, timestamp, filePath, caption, photoOwner FROM mygroups UNION (SELECT photoID,timestamp,filePath, caption, photoOwner FROM myphotos) UNION (SELECT photoID,timestamp,filePath, caption, photoOwner FROM myfollows) ORDER BY timestamp DESC"
     cursor.execute(totalQuery)
     data = cursor.fetchall()
-    print(data)
+    # print(data)
     cursor.close()
 
     cursor = connection.cursor()
@@ -102,7 +102,13 @@ def images():
     cursor.execute(query)
     cursor.close()
 
-    return render_template("images.html", photos=data)
+    cursor = connection.cursor()
+    taggedquery = "SELECT * FROM Tag JOIN Photo ON (Tag.photoID = Photo.photoID) NATURAL JOIN Person"
+    cursor.execute(taggedquery)
+    taggedUsers = cursor.fetchall()
+    cursor.close()
+
+    return render_template("images.html", photos=data, taggedUsers=taggedUsers)
 
 @app.route("/groups", methods=["GET"])
 def groups():
