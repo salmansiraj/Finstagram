@@ -7,7 +7,7 @@
         <div>
             <form action="/uploadImage" method="post" enctype="multipart/form-data">
                 <input type="file" name="imageToUpload" accept="image/*"><br/>
-                <textarea name="caption" placeholder="Insert caption..."></textarea><br/>   
+                <textarea name="caption" placeholder="Insert caption..."></textarea><br/>
                 <label for="allFollowers"> All Followers </label>
                 <input type="checkbox" name="allFollowers"><br/>
                 <input type="submit" value="Upload"><br/>
@@ -17,6 +17,9 @@
         </div>
         {% if message %}
             {{ message }}
+        {% endif %}
+        {% if error %}
+            {{ error }}
         {% endif %}
         <br/>
         <a href="/">Go back</a>

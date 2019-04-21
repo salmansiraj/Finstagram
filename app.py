@@ -130,11 +130,11 @@ def loginAuth():
 
 @app.route("/registerAuth", methods=["POST"])
 def registerAuth():
-    if request.form:
+    if request.files:
         image_file = request.files.get("profilePic", "")
-        # image_name = image_file.filename
-        # filepath = os.path.join(IMAGES_DIR, image_name)
-        # image_file.save(filepath)
+        image_name = image_file.filename
+        filepath = os.path.join(IMAGES_DIR, image_name)
+        image_file.save(filepath)
         requestData = request.form
         username = requestData["username"]
         plaintextPasword = requestData["password"]
@@ -150,7 +150,7 @@ def registerAuth():
         try:
             with connection.cursor() as cursor:
                 query = "INSERT INTO person (username, password, fname, lname, avatar, bio, isPrivate) VALUES (%s, %s, %s, %s, %s, %s, %r)"
-                cursor.execute(query, (username, hashedPassword, firstName, lastName, 'image_name', bio, private))
+                cursor.execute(query, (username, hashedPassword, firstName, lastName, image_name, bio, private))
         except pymysql.err.IntegrityError:
             error = "%s is already taken." % (username)
             return render_template('register.html', error=error)
@@ -192,11 +192,12 @@ def upload_image():
         with connection.cursor() as cursor2:
             cursor2.execute(query2, (taggedUser, cursor1.lastrowid, False))
 
+
         message = "Image has been successfully uploaded."
         return render_template("upload.html", message=message, username=session["username"])
-    else:
-        message = "Failed to upload image."
-        return render_template("upload.html", message=message, username=session["username"])
+
+    error = "Failed to upload image."
+    return render_template("upload.html", error=error, username=session["username"])
 
 
 @app.route("/taggedStatus", methods=["POST"])
