@@ -125,6 +125,50 @@ def groups():
     return render_template("groups.html", groups=data1, users=data2, username=session["username"])
 
 
+@app.route("/searchPhoto", methods=["POST"])
+def searchPhoto():
+    user = session["username"]
+    searchPhoto = request.form["getphoto"]
+
+    cursor = connection.cursor()
+    queryFollow = "CREATE VIEW myfollows AS SELECT DISTINCT filePath, photoID, timestamp, caption, photoOwner FROM Photo JOIN Follow ON (Photo.photoOwner=followeeUsername) WHERE followerUsername=%s AND allFollowers=%s"
+    cursor.execute(queryFollow, (user, 1))
+    cursor.close()
+
+    cursor = connection.cursor()
+    queryGroups = "CREATE VIEW mygroups AS SELECT DISTINCT filePath, photoID, timestamp, caption, photoOwner FROM Photo NATURAL JOIN Belong WHERE Belong.username=%s"
+    cursor.execute(queryGroups, (user))
+    cursor.close()
+
+    cursor = connection.cursor()
+    querySelf = "CREATE VIEW myphotos AS SELECT filePath, photoID, timestamp, caption, photoOwner FROM Photo WHERE photoOwner=%s"
+    cursor.execute(querySelf, (user))
+    cursor.close()
+
+    cursor = connection.cursor()
+    totalQuery = "CREATE VIEW gallery AS SELECT DISTINCT photoID, timestamp, filePath, caption, photoOwner FROM mygroups UNION (SELECT photoID,timestamp,filePath, caption, photoOwner FROM myphotos) UNION (SELECT photoID,timestamp,filePath, caption, photoOwner FROM myfollows) ORDER BY timestamp DESC"
+    cursor.execute(totalQuery)
+    cursor.close()
+
+    cursor = connection.cursor()
+    searchQuery = "SELECT * FROM gallery WHERE photoID=%s"
+    cursor.execute(searchQuery, (searchPhoto))
+    data = cursor.fetchall()
+
+    cursor = connection.cursor()
+    query = "DROP VIEW myphotos, mygroups, myfollows, gallery"
+    cursor.execute(query)
+    cursor.close()
+
+    cursor = connection.cursor()
+    taggedquery = "SELECT * FROM Tag JOIN Photo ON (Tag.photoID = Photo.photoID) NATURAL JOIN Person"
+    cursor.execute(taggedquery)
+    taggedUsers = cursor.fetchall()
+    cursor.close()
+
+    return render_template("images.html", username=session["username"], currPhoto=data, taggedUsers=taggedUsers)
+
+
 @app.route("/image/<image_name>", methods=["GET"])
 def image(image_name):
     image_location = os.path.join(IMAGES_DIR, image_name)
@@ -226,11 +270,27 @@ def upload_image():
         with connection.cursor() as cursor1:
             cursor1.execute(query1, (time.strftime('%Y-%m-%d %H:%M:%S'), image_name, caption, allFollowers, imageOwner))
         if (taggedUser != ""):
-            with connection.cursor() as cursor2:
-                query2 = "INSERT INTO Tag (username, photoID, acceptedTag) VALUES (%s, %s, %r)"
-                for taggee in taggedUser:
-                    cursor2.execute(query2, (taggee, cursor1.lastrowid, False))
-
+            try:
+                with connection.cursor() as cursor2:
+                    query2 = "INSERT INTO Tag (username, photoID, acceptedTag) VALUES (%s, %s, %r)"
+                    query3 = "SELECT username FROM Belong WHERE groupOwner = %s AND username = %s"
+                    for taggee in taggedUser:
+                        if (taggee==imageOwner):
+                            cursor2.execute(query2, (taggee, cursor1.lastrowid, True))
+                        elif (taggee != imageOwner):
+                            if (allFollowers==True):
+                                cursor2.execute(query2, (taggee, cursor1.lastrowid, False))
+                            else:
+                                cursor2.execute(query3, (imageOwner, taggee))
+                                data = cursor2.fetchone()
+                                if data:
+                                    cursor2.execute(query2, (taggee, cursor1.lastrowid, False))
+                                else:
+                                    error = "Tagged user cannot view photo, invalid tag"
+                                    return render_template('upload.html', error=error, username=session["username"])
+            except pymysql.err.IntegrityError:
+                error = "Tagged user(s) do not exist. Please try again."
+                return render_template('upload.html', error=error, username=session["username"])
 
         message = "Image has been successfully uploaded."
         return render_template("upload.html", message=message, username=session["username"])
