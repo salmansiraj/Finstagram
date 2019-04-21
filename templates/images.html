@@ -11,7 +11,9 @@
                 <img src="/image/{{image.filePath}}" width='300'><br>
                 <h4> {{image.photoOwner}}, {{image.photoID}} </h4>
                 <p> {{image.caption}} </p>
+                {% endfor %}
             {% endfor %}
+            
         </div>
         
         {% if message %}

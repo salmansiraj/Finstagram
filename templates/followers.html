@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Followers</title>
+</head>
+<body>
+
+    <h1>Followers</h1>
+    <ul>
+        {% for follower in followers %}
+        <li>
+            {{follower.followerUsername}}
+        </li>
+        {% endfor %}
+    </ul>
+
+    <h1>Following</h1>
+    <ul>
+        {% for user in following %}
+        <li>
+            {{user.followeeUsername}}
+        </li>
+        {% endfor %}
+    </ul>
+    
+    <form action="/unfollow" method="post" enctype="multipart/form-data">
+        <h2>Enter username to unfollow</h2>
+        <input type="text" name="unfollowee">
+        <input type="submit" value="Unfollow" placeholder="Username">
+    </form>
+
+    {% if message %}
+    {{ message }}
+    {% endif %}
+
+    <a href="/">Go back</a>
+
+</body>
+</html>

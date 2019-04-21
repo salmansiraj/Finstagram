@@ -21,7 +21,8 @@ body {
     color:rgb(255,250,250);
 
     /* IMAGE */
-    background: linear-gradient( rgba(0, 0, 0, 0.25), rgba(0, 0, 0, 0.25) ), url("finsta-landing.jpg");
+    /* background: linear-gradient( rgba(0, 0, 0, 0.25), rgba(0, 0, 0, 0.25) ), url("../images/finsta-landing.jpg"); */
+    background: linear-gradient( rgba(0, 0, 0, 0.25), rgba(0, 0, 0, 0.25) ), url("/static/finsta-landing.jpg");
     background-size: cover;
     background-position: center center;
     background-repeat: no-repeat;
@@ -82,20 +83,4 @@ body {
     font-size: 0.75em;
     font-family: 'Roboto Condensed', sans-serif;
     letter-spacing: 0.15em;
-}
-
-#login {
-    background: linear-gradient( rgba(0, 0, 0, 0.25), rgba(0, 0, 0, 0.25) ), url("finsta-landing2.jpg");
-    background-size: cover;
-    background-position: center center;
-    background-repeat: no-repeat;
-    background-attachment: fixed;
-}
-
-#register {
-    background: linear-gradient( rgba(0, 0, 0, 0.25), rgba(0, 0, 0, 0.25) ), url("finsta-landing4.jpg");
-    background-size: cover;
-    background-position: center center;
-    background-repeat: no-repeat;
-    background-attachment: fixed;
 }
