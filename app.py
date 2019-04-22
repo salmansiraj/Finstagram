@@ -220,14 +220,19 @@ def registerAuth():
         hashedPassword = hashlib.sha256(plaintextPasword.encode("utf-8")).hexdigest()
         firstName = requestData["fname"]
         lastName = requestData["lname"]
-        
+        bio = requestData["bio"]
+        private = requestData["private"]
+        if (private=="yes"):
+            private = 1
+        else:
+            private = 0
         try:
             with connection.cursor() as cursor:
                 query = "INSERT INTO person (username, password, fname, lname, avatar, bio, isPrivate) VALUES (%s, %s, %s, %s, %s, %s, %r)"
                 cursor.execute(query, (username, hashedPassword, firstName, lastName, image_name, bio, private))
         except pymysql.err.IntegrityError:
             error = "%s is already taken." % (username)
-            return render_template('register.html', error=error)    
+            return render_template('register.html', error=error)
 
         return redirect(url_for("login"))
 
@@ -247,7 +252,7 @@ def upload_image():
         image_file = request.files.get("imageToUpload", "")
         image_name = image_file.filename
         filepath = os.path.join(IMAGES_DIR, image_name)
-        image_file.save(filepath)   
+        image_file.save(filepath)
         caption = request.form["caption"]
         imageOwner = session["username"]
         taggedUser = request.form["taggedUser"]
@@ -265,11 +270,27 @@ def upload_image():
         with connection.cursor() as cursor1:
             cursor1.execute(query1, (time.strftime('%Y-%m-%d %H:%M:%S'), image_name, caption, allFollowers, imageOwner))
         if (taggedUser != ""):
-            with connection.cursor() as cursor2:
-                query2 = "INSERT INTO Tag (username, photoID, acceptedTag) VALUES (%s, %s, %r)"
-                for taggee in taggedUser:
-                    cursor2.execute(query2, (taggee, cursor1.lastrowid, False))
-
+            try:
+                with connection.cursor() as cursor2:
+                    query2 = "INSERT INTO Tag (username, photoID, acceptedTag) VALUES (%s, %s, %r)"
+                    query3 = "SELECT username FROM Belong WHERE groupOwner = %s AND username = %s"
+                    for taggee in taggedUser:
+                        if (taggee==imageOwner):
+                            cursor2.execute(query2, (taggee, cursor1.lastrowid, True))
+                        elif (taggee != imageOwner):
+                            if (allFollowers==True):
+                                cursor2.execute(query2, (taggee, cursor1.lastrowid, False))
+                            else:
+                                cursor2.execute(query3, (imageOwner, taggee))
+                                data = cursor2.fetchone()
+                                if data:
+                                    cursor2.execute(query2, (taggee, cursor1.lastrowid, False))
+                                else:
+                                    error = "Tagged user cannot view photo, invalid tag"
+                                    return render_template('upload.html', error=error, username=session["username"])
+            except pymysql.err.IntegrityError:
+                error = "Tagged user(s) do not exist. Please try again."
+                return render_template('upload.html', error=error, username=session["username"])
 
         message = "Image has been successfully uploaded."
         return render_template("upload.html", message=message, username=session["username"])
@@ -356,10 +377,10 @@ def follow():
                 if follower != followee:
                     cursor.execute(query, (follower, followee, acceptedFollow))
                     message = "Follower request sent to " + followee
-                else: 
+                else:
                     message = "You can't follow yourself!"
         except:
-            message = "Failed to request follow for " + followee 
+            message = "Failed to request follow for " + followee
         return render_template("home.html", message=message, username=session["username"])
     else:
         return render_template("home.html", username=session["username"])
@@ -376,7 +397,7 @@ def unfollow():
                 cursor.execute(deleteQuery, (unfollowee, follower))
         except:
             # error message still not right -- will leave like this for now
-            message = "Unfollowed " + unfollowee            
+            message = "Unfollowed " + unfollowee
         return render_template("followers.html", message=message, username=session["username"])
     else:
         return render_template("followers.html", message=message, username=session["username"])
