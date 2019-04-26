@@ -21,6 +21,11 @@
                     {% endif %}
                 {% endif %}
             {% endfor %}
+            <h3> Tag a User: </h3>
+            <form action="/tagAUser" method="post">
+              <input type="text" name="tagUser" /><br>
+              <input type="submit" name="submit_button">
+            </form>
         {% endfor %}
         <div>
             {% for image in photos %}
@@ -35,9 +40,14 @@
                             {% endif %}
                         {% endif %}
                     {% endfor %}
+                    <h3> Tag a User: </h3>
+                    <form action="/tagAUser" method="post">
+                      <input type="text" name="tagUser" /><br>
+                      <input type="submit" name="submit_button">
+                    </form>
             {% endfor %}
         </div>
-        
+
         {% if message %}
             {{ message }}
         {% endif %}
