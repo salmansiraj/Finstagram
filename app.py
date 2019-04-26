@@ -464,7 +464,13 @@ def searchForUser():
                 query1 = "SELECT filePath, photoID, timestamp, caption, photoOwner FROM Photo WHERE photoOwner=%s"
                 cursor.execute(query1, (searchedUser))
                 data = cursor.fetchall()
-                return render_template("specificUser.html", message=message, username=session["username"])
+
+                taggedquery = "SELECT * FROM Tag JOIN Photo ON (Tag.photoID = Photo.photoID) NATURAL JOIN Person"
+                cursor.execute(taggedquery)
+                taggedUsers = cursor.fetchall()
+                cursor.close()
+
+                return render_template("specificUser.html", username=session["username"], posts=data)
         except pymysql.err.IntegrityError:
             message = "Searched user does not exist. Please try again."
             return render_template("home.html", message=message, username=session["username"])
