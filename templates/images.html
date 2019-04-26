@@ -24,11 +24,11 @@
                     {% endif %}
                 {% endif %}
             {% endfor %}
-            <h3> Tag a User: </h3>
-            <form action="/tagAUser" method="post">
-              <input type="text" name="tagUser" /><br>
-              <input type="submit" name="submit_button">
-            </form>
+            <!-- <h3> Tag a User:asdasdasd </h3>
+            <form action="/tagAUser" method="post" enctype="multipart/form-data">
+              <input type="text" name="tagUser{{photo.photoID}}" /><br>
+              <input type="submit" value="Submit">
+            </form> -->
         {% endfor %}
         <div>
             {% for image in photos %}
@@ -63,11 +63,10 @@
                     {% endfor %}
 
                     <h3> Tag a User: </h3>
-                    <form action="/tagAUser" method="post">
-                      <input type="text" name="tagUser" /><br>
-                      <input type="submit" name="submit_button">
+                    <form action="/tagAUser" method="post" enctype="multipart/form-data">
+                      <input type="text" name="tagUser{{image.photoID}}" /><br>
+                      <input type="submit" value="submit_button">
                     </form>
-
                 </ul>
 
 
@@ -96,4 +95,3 @@
         <a href="/">Go back</a>
     </body>
 </html>
-

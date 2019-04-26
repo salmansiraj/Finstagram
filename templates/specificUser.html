@@ -4,11 +4,6 @@
     </head>
     <body>
         <h1>Image Gallery</h1>
-        <h2> Search for Photo </h2>
-        <form action="/searchPhoto" method="post">
-            <input type="text" name="getphoto" /><br>
-            <input type="submit" name="submit_button">
-        </form>
         {% for photo in posts %}
             <img src="/image/{{photo.filePath}}" width='300'><br>
             <h4> {{photo.photoOwner}}, {{photo.photoID}} </h4>
@@ -21,11 +16,6 @@
                     {% endif %}
                 {% endif %}
             {% endfor %}
-            <!-- <h3> Tag a User: </h3>
-            <form action="/tagAUser" method="post">
-              <input type="text" name="tagUser" /><br>
-              <input type="submit" name="submit_button">
-            </form> -->
         {% endfor %}
         <div>
             {% for image in photos %}
@@ -40,11 +30,6 @@
                             {% endif %}
                         {% endif %}
                     {% endfor %}
-                    <!-- <h3> Tag a User: </h3>
-                    <form action="/tagAUser" method="post">
-                      <input type="text" name="tagUser" /><br>
-                      <input type="submit" name="submit_button">
-                    </form> -->
             {% endfor %}
         </div>
 
