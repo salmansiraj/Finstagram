@@ -146,9 +146,12 @@ def tagAUser():
         photoID = ''
         taggedUser = ''
         user = session["username"]
+        # print(requestData['tagUser'])
         for name in requestData:
-            photoID = name.strip("tagUser")
-            taggedUser = requestData[name]
+            print(name)
+            # photoID = name.strip("tagUser")
+            # taggedUser = requestData[name]
+            # print(name, taggedUser, photoID, 'print here')
         if (len(taggedUser) != 0):
             taggedUser = taggedUser.split(',')
         else:
@@ -172,10 +175,10 @@ def tagAUser():
                             cursor.execute(totalQuery)
                             data = cursor.fetchone()
                             cursor.execute(query)
-                            if not data:
+                            if data:
                                 message = "Photo isn't visible to the taggee"
                                 return render_template("images.html", message=message, username=session["username"])
-                            cursor.execute(check, (photoID,taggee))
+                            cursor.execute(check, (photoID, taggee))
                             data2 = cursor.fetchone()
                             if data2:
                                 message = "Taggee has already been tagged"
@@ -184,9 +187,9 @@ def tagAUser():
                             query2 = "INSERT INTO Tag (username, photoID, acceptedTag) VALUES (%s, %s, %r)"
                             query3 = "SELECT username FROM Belong WHERE groupOwner = %s AND username = %s"
                             if (taggee==user):
-                                cursor2.execute(query2, (taggee, photoID, True))
+                                cursor.execute(query2, (taggee, photoID, True))
                             else:
-                                cursor2.execute(query2, (taggee, photoID, False))
+                                cursor.execute(query2, (taggee, photoID, False))
                 except pymysql.err.IntegrityError:
                     error = "Tagged user(s) do not exist. Please try again."
                     return render_template('images.html', error=error, username=session["username"])
