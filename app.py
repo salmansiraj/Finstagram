@@ -42,6 +42,7 @@ def home():
         cursor2.execute(query2, (0, followee))
     requests = cursor2.fetchall()
     # print(requests)
+
     return render_template("home.html", username=session["username"], requests=requests)
 
 @app.route("/upload", methods=["GET"])
@@ -108,7 +109,20 @@ def images():
     taggedUsers = cursor.fetchall()
     cursor.close()
 
-    return render_template("images.html", photos=data, taggedUsers=taggedUsers)
+    cursor = connection.cursor()
+    commentsQuery = "SELECT username, photoID, commentText FROM Comment"
+    cursor.execute(commentsQuery)
+    comments = cursor.fetchall()
+    cursor.close()
+
+    cursor = connection.cursor()
+    likesQuery = "SELECT username, photoID FROM Liked"
+    cursor.execute(likesQuery)
+    likes = cursor.fetchall()
+    cursor.close()
+    print(likes)
+    
+    return render_template("images.html", photos=data, taggedUsers=taggedUsers, comments=comments, likes=likes)
 
 @app.route("/groups", methods=["GET"])
 def groups():
@@ -352,8 +366,8 @@ def upload_image():
             taggedUser = taggedUser.split(',')
         else:
             taggedUser = ""
-        test = request.form.get("allFollowers")
-        if (test == "on"):
+        followerFlag = request.form.get("allFollowers")
+        if (followerFlag == "on"):
             allFollowers = True
         else:
             allFollowers = False
@@ -517,7 +531,7 @@ def unfollow():
         return render_template("followers.html", message=message, username=session["username"])
 
 @app.route("/followers", methods=["GET"])
-def followers():
+def displayFollowers():
     user = session["username"]
     query1 = "SELECT followerUsername FROM Follow WHERE followeeUsername=%s AND acceptedfollow=%s"
     query2 = "SELECT followeeUsername FROM Follow WHERE followerUsername=%s AND acceptedfollow=%s"
@@ -553,6 +567,39 @@ def followStatus():
                 with connection.cursor() as cursor:
                     cursor.execute(deleteQ, (follower["followerUsername"]))
     return render_template("notifications.html", username=session["username"])
+
+
+@app.route("/like", methods=["POST"])
+@login_required
+def like():
+    if request.form:
+        requestData = request.form
+        liker = session["username"]
+        photoID = requestData["likeID"]
+        query = "INSERT INTO Liked (username, photoID, timestamp) VALUES (%s, %s, %s)"
+        with connection.cursor() as cursor:
+            cursor.execute(query, (liker, photoID, time.strftime('%Y-%m-%d %H:%M:%S')))
+
+        return render_template("images.html", username=session["username"])
+    else:
+        return render_template("images.html", username=session["username"])
+
+@app.route("/comment", methods=["POST"])
+@login_required
+def comment():
+    if request.form:
+        requestData = request.form
+        commenter = session["username"]
+        comment = requestData["comment"]
+        photoID = requestData["commentID"]
+        insertQuery = "INSERT INTO Comment (username, photoID, commentText, timestamp) VALUES (%s, %s, %s, %s)"
+        with connection.cursor() as cursor:
+            cursor.execute(insertQuery, (commenter, photoID,comment, time.strftime('%Y-%m-%d %H:%M:%S')))
+        return render_template("images.html", username=session["username"])
+    else:
+        return render_template("images.html", username=session["username"])
+
+
 
 
 if __name__ == "__main__":

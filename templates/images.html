@@ -1,5 +1,8 @@
 <html>
     <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta http-equiv="X-UA-Compatible" content="ie=edge">
         <title>Finstagram</title>
     </head>
     <body>
@@ -29,22 +32,61 @@
         {% endfor %}
         <div>
             {% for image in photos %}
-                    <img src="/image/{{image.filePath}}" width='300'><br>
-                    <h4> {{image.photoOwner}}, {{image.photoID}} </h4>
-                    <p> {{image.caption}} </p>
-                <h3> taggedUsers: </h3>
+
+                <img src="/image/{{image.filePath}}" width='300'><br>
+                <h4>Posted by: {{image.photoOwner}} | PhotoID: {{image.photoID}} </h4>
+                <h4>{{image.timestamp}}</h4>
+                <p> {{image.caption}} </p>
+
+                <form action="/like" method="post">
+                    <button type="submit" name="likeID" value="{{image.photoID}}">Like</button>
+                </form>
+
+                <h4>Liked By</h4>
+                <ul>
+                    {% for liker in likes %}
+                        {% if liker.photoID == image.photoID %}
+                            <li> {{liker.username}} </li>
+                        {% endif %}
+                    {% endfor %}
+                </ul>
+
+
+                <h4>Tagged Users</h4>
+                <ul>
                     {% for taggedImage in taggedUsers %}
                         {% if taggedImage.photoID == image.photoID %}
                             {% if taggedImage.acceptedTag %}
-                                <h5> {{ taggedImage.lname }} </h5>
+                                <li> {{taggedImage.fname}} {{taggedImage.lname}}  </li>
                             {% endif %}
                         {% endif %}
                     {% endfor %}
+
                     <h3> Tag a User: </h3>
                     <form action="/tagAUser" method="post">
                       <input type="text" name="tagUser" /><br>
                       <input type="submit" name="submit_button">
                     </form>
+
+                </ul>
+
+
+                <h4>Comments</h4>
+                <ul>
+                    {% for item in comments %}
+                        {% if item.photoID == image.photoID %}
+                            <li> {{item.username}} : {{item.commentText}} </li>
+                        {% endif %}
+                    {% endfor %}
+                </ul>
+
+                <h4>Add a comment</h4>
+                <form action="/comment" method="post">
+                    <textarea name="comment" placeholder="Comment..."></textarea>
+                    <button type="submit" value="{{image.photoID}}" name="commentID">Post</button>
+                </form>
+                <hr>
+
             {% endfor %}
         </div>
 
@@ -54,3 +96,4 @@
         <a href="/">Go back</a>
     </body>
 </html>
+
