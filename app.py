@@ -146,12 +146,10 @@ def tagAUser():
         photoID = ''
         taggedUser = ''
         user = session["username"]
-        # print(requestData['tagUser'])
         for name in requestData:
-            print(name)
-            # photoID = name.strip("tagUser")
-            # taggedUser = requestData[name]
-            # print(name, taggedUser, photoID, 'print here')
+            photoID = name.strip("tagUser")
+            taggedUser = requestData[name]
+            print(name, taggedUser, photoID, 'print here')
         if (len(taggedUser) != 0):
             taggedUser = taggedUser.split(',')
         else:
@@ -175,7 +173,7 @@ def tagAUser():
                             cursor.execute(totalQuery)
                             data = cursor.fetchone()
                             cursor.execute(query)
-                            if data:
+                            if not data:
                                 message = "Photo isn't visible to the taggee"
                                 return render_template("images.html", message=message, username=session["username"])
                             cursor.execute(check, (photoID, taggee))
