@@ -121,7 +121,7 @@ def images():
     likes = cursor.fetchall()
     cursor.close()
     print(likes)
-    
+
     return render_template("images.html", photos=data, taggedUsers=taggedUsers, comments=comments, likes=likes)
 
 @app.route("/groups", methods=["GET"])
@@ -139,58 +139,63 @@ def groups():
     # print(data2)
     return render_template("groups.html", groups=data1, users=data2, username=session["username"])
 
-@app.route("/tagAUser", methods=["POST"])
+@app.route("/tagAUser", methods=["GET","POST"])
 def tagAUser():
-    user = session["username"]
-    taggedUser = request.form["tagUser"]
+    if request.form:
+        requestData = request.form
+        photoID = ''
+        taggedUser = ''
+        user = session["username"]
+        for name in requestData:
+            photoID = name.strip("tagUser")
+            taggedUser = requestData[name]
+        if (len(taggedUser) != 0):
+            taggedUser = taggedUser.split(',')
+        else:
+            taggedUser = ""
 
-    cursor = connection.cursor()
-    queryFollow = "CREATE VIEW myfollows AS SELECT DISTINCT filePath, photoID, timestamp, caption, photoOwner FROM Photo JOIN Follow ON (Photo.photoOwner=followeeUsername) WHERE followerUsername=%s AND allFollowers=%s"
-    cursor.execute(queryFollow,(user,1))
+        if request.method == "POST":
+            check = "SELECT * FROM tag WHERE photoID=%s AND username=%s"
+            if (taggedUser != ""):
+                try:
+                    with connection.cursor() as cursor:
+                        queryFollow = "CREATE VIEW myfollows AS SELECT DISTINCT filePath, photoID, timestamp, caption, photoOwner FROM Photo JOIN Follow ON (Photo.photoOwner=followeeUsername) WHERE followerUsername=%s AND allFollowers=%s"
+                        queryGroups = "CREATE VIEW mygroups AS SELECT DISTINCT filePath, photoID, timestamp, caption, photoOwner FROM Photo NATURAL JOIN Belong WHERE Belong.username=%s"
+                        querySelf = "CREATE VIEW myphotos AS SELECT filePath, photoID, timestamp, caption, photoOwner FROM Photo WHERE photoOwner=%s"
+                        totalQuery = "SELECT DISTINCT photoID, timestamp, filePath, caption, photoOwner FROM mygroups UNION (SELECT photoID,timestamp,filePath, caption, photoOwner FROM myphotos) UNION (SELECT photoID,timestamp,filePath, caption, photoOwner FROM myfollows) ORDER BY timestamp DESC"
+                        query = "DROP VIEW myphotos, mygroups, myfollows"
 
-    queryGroups = "CREATE VIEW mygroups AS SELECT DISTINCT filePath, photoID, timestamp, caption, photoOwner FROM Photo NATURAL JOIN Belong WHERE Belong.username=%s"
-    cursor.execute(queryGroups, (user))
+                        for taggee in taggedUser:
+                            cursor.execute(queryFollow, (taggee, 1))
+                            cursor.execute(queryGroups, (taggee))
+                            cursor.execute(querySelf, (taggee))
+                            cursor.execute(totalQuery)
+                            data = cursor.fetchone()
+                            cursor.execute(query)
+                            if not data:
+                                message = "Photo isn't visible to the taggee"
+                                return render_template("images.html", message=message, username=session["username"])
+                            cursor.execute(check, (photoID,taggee))
+                            data2 = cursor.fetchone()
+                            if data2:
+                                message = "Taggee has already been tagged"
+                                return render_template("images.html", message=message, username=session["username"])
 
-    querySelf = "CREATE VIEW myphotos AS SELECT filePath, photoID, timestamp, caption, photoOwner FROM Photo WHERE photoOwner=%s"
-    cursor.execute(querySelf, (user))
-
-    totalQuery = "SELECT DISTINCT photoID, timestamp, filePath, caption, photoOwner FROM mygroups UNION (SELECT photoID,timestamp,filePath, caption, photoOwner FROM myphotos) UNION (SELECT photoID,timestamp,filePath, caption, photoOwner FROM myfollows) ORDER BY timestamp DESC"
-    cursor.execute(totalQuery)
-    data = cursor.fetchall()
-
-    query = "DROP VIEW myphotos, mygroups, myfollows"
-    cursor.execute(query)
-    cursor.close()
-
-    if (taggedUser != ""):
-        try:
-            with connection.cursor() as cursor2:
-                query2 = "INSERT INTO Tag (username, photoID, acceptedTag) VALUES (%s, %s, %r)"
-                query3 = "SELECT username FROM Belong WHERE groupOwner = %s AND username = %s"
-                for taggee in taggedUser:
-                    if (taggee==imageOwner):
-                        cursor2.execute(query2, (taggee, cursor1.lastrowid, True))
-                    elif (taggee != imageOwner):
-                        if (allFollowers==True):
-                            cursor2.execute(query2, (taggee, cursor1.lastrowid, False))
-                        else:
-                            cursor2.execute(query3, (imageOwner, taggee))
-                            data = cursor2.fetchone()
-                            if data:
-                                cursor2.execute(query2, (taggee, cursor1.lastrowid, False))
+                            query2 = "INSERT INTO Tag (username, photoID, acceptedTag) VALUES (%s, %s, %r)"
+                            query3 = "SELECT username FROM Belong WHERE groupOwner = %s AND username = %s"
+                            if (taggee==user):
+                                cursor2.execute(query2, (taggee, photoID, True))
                             else:
-                                error = "Tagged user cannot view photo, invalid tag"
-                                return render_template('images.html', error=error, username=session["username"])
-        except pymysql.err.IntegrityError:
-            error = "Tagged user(s) do not exist. Please try again."
-            return render_template('images.html', error=error, username=session["username"])
+                                cursor2.execute(query2, (taggee, photoID, False))
+                except pymysql.err.IntegrityError:
+                    error = "Tagged user(s) do not exist. Please try again."
+                    return render_template('images.html', error=error, username=session["username"])
 
-        message = "Image has been successfully tagged."
+                message = "Image has been successfully tagged."
+                return render_template("images.html", message=message, username=session["username"])
+
+            error = "Failed to tag user."
         return redirect(url_for("images"))
-        # return render_template("images.html", message=message, username=session["username"])
-
-    error = "Failed to tag user."
-    return redirect(url_for("images"))
 
     # return render_template("images.html", error=error, username=session["username"])
 
@@ -375,29 +380,6 @@ def upload_image():
 
         with connection.cursor() as cursor1:
             cursor1.execute(query1, (time.strftime('%Y-%m-%d %H:%M:%S'), image_name, caption, allFollowers, imageOwner))
-        # if (taggedUser != ""):
-        #     try:
-        #         with connection.cursor() as cursor2:
-        #             query2 = "INSERT INTO Tag (username, photoID, acceptedTag) VALUES (%s, %s, %r)"
-        #             query3 = "SELECT username FROM Belong WHERE groupOwner = %s AND username = %s"
-        #             for taggee in taggedUser:
-        #                 if (taggee==imageOwner):
-        #                     cursor2.execute(query2, (taggee, cursor1.lastrowid, True))
-        #                 elif (taggee != imageOwner):
-        #                     if (allFollowers==True):
-        #                         cursor2.execute(query2, (taggee, cursor1.lastrowid, False))
-        #                     else:
-        #                         cursor2.execute(query3, (imageOwner, taggee))
-        #                         data = cursor2.fetchone()
-        #                         if data:
-        #                             cursor2.execute(query2, (taggee, cursor1.lastrowid, False))
-        #                         else:
-        #                             error = "Tagged user cannot view photo, invalid tag"
-        #                             return render_template('upload.html', error=error, username=session["username"])
-        #     except pymysql.err.IntegrityError:
-        #         error = "Tagged user(s) do not exist. Please try again."
-        #         return render_template('upload.html', error=error, username=session["username"])
-
         message = "Image has been successfully uploaded."
         return render_template("upload.html", message=message, username=session["username"])
 

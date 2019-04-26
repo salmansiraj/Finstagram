@@ -26,7 +26,7 @@
             {% endfor %}
             <h3> Tag a User: </h3>
             <form action="/tagAUser" method="post">
-              <input type="text" name="tagUser" /><br>
+              <input type="text" name="tagUser{{photo.photoID}}" /><br>
               <input type="submit" name="submit_button">
             </form>
         {% endfor %}
@@ -61,13 +61,11 @@
                             {% endif %}
                         {% endif %}
                     {% endfor %}
-<<<<<<< HEAD
                     <h3> Tag a User: </h3>
                     <form action="/tagAUser" method="post">
                       <input type="text" name="tagUser" /><br>
                       <input type="submit" name="submit_button">
                     </form>
-=======
                 </ul>
 
 
@@ -86,7 +84,6 @@
                     <button type="submit" value="{{image.photoID}}" name="commentID">Post</button>
                 </form>
                 <hr>
->>>>>>> c36d98edb11f741907cab6c28b784da8a4df010a
             {% endfor %}
         </div>
 
@@ -95,9 +92,4 @@
         {% endif %}
         <a href="/">Go back</a>
     </body>
-<<<<<<< HEAD
 </html>
-=======
-
-</html>
->>>>>>> c36d98edb11f741907cab6c28b784da8a4df010a
