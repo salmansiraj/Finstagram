@@ -3,55 +3,57 @@
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <meta http-equiv="X-UA-Compatible" content="ie=edge">
-        <title>Register</title>
         <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
         <link href="https://fonts.googleapis.com/css?family=Fira+Sans" rel="stylesheet">
         <link href="https://fonts.googleapis.com/css?family=Cookie" rel="stylesheet">
         <link href="https://fonts.googleapis.com/css?family=Roboto+Condensed" rel="stylesheet">
         <link rel="stylesheet" type="text/css" href="static/register.css">
+        <title>Register</title>
     </head>
     <body>
+        <nav class="navbar navbar-expand-sm navbar-dark fixed-top py-0">
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            
+            <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                <ul class="navbar-nav ml-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/login">LOGIN</a>
+                    </li>
+                </ul>
+            </div>
+        </nav>
 
-        <div class="collapse navbar-collapse" id="navbarSupportedContent">
-            <ul class="navbar-nav ml-auto">
-                <li class="nav-item">
-                    <a class="nav-link" href="/login">login</a>
-                </li>
-            </ul>
-        </div>
-        <h1>Register</h1>
-        <div>
+        <div class="registering">
+            <h1>REGISTER</h1>
+
             <form action="/registerAuth" method="post" enctype="multipart/form-data">
                 <p>
-                  Username:
-                <input type="text" name="username" placeholder="Username" required/>
+                <input class="formBox" type="text" name="username" placeholder="Username" required/>
                 <br/></p>
                 <p>
-                  Password:
-                <input type="password" name="password" placeholder="Password" required/>
+                <input class="formBox" type="password" name="password" placeholder="Password" required/>
                 <br/></p>
                 <p>
-                  First Name:
-                <input type="text" name="fname" placeholder="First Name" required/>
+                <input class="formBox" type="text" name="fname" placeholder="First Name" required/>
                 <br/></p>
                 <p>
-                  Last Name:
-                <input type="text" name="lname" placeholder="Last Name" required/>
+                <input class="formBox" type="text" name="lname" placeholder="Last Name" required/>
                 <br/></p>
-                <p>
-                  Avatar:
-                <input type="file" name="profilePic" accept="image/*"><br/>
+                <p class="outside">
+                  AVATAR:
+                <button class="btn btn-outline-light" type="file" name="profilePic" accept="image/*">UPLOAD IMAGE</button><br/>
                 </p>
                 <p>
-                  Bio:
-                <textarea name="bio" placeholder="Insert bio..."></textarea>
+                <textarea class="formBox" name="bio" placeholder="Insert bio..."></textarea>
                 <br/></p>
 
-                <p>
-                  Private: <input type="radio" name="private" value="yes"> Yes
-                           <input type="radio" name="private" value="no"> No
+                <p class="outside">
+                  PRIVATE: <input type="radio" name="private" value="yes"> YES
+                           <input type="radio" name="private" value="no"> NO
                 <br/></p>
-                <input type="submit" value="Register">
+                <button type="submit" value="Register" class="btn btn-outline-light">REGISTER</button>
             </form>
         </div>
         {% if error %}
