@@ -5,6 +5,7 @@ body {
     margin: 0;
     font-family: 'Fira Sans', sans-serif;
 }
+
 .hero {
     /* ALIGNING */
     width: 100vw;
@@ -20,7 +21,8 @@ body {
     color:rgb(255,250,250);
 
     /* IMAGE */
-    background: linear-gradient( rgba(0, 0, 0, 0.25), rgba(0, 0, 0, 0.25) ), url("/static/finsta-landing2.jpg");
+    /* background: linear-gradient( rgba(0, 0, 0, 0.25), rgba(0, 0, 0, 0.25) ), url("../images/finsta-landing.jpg"); */
+    background: linear-gradient( rgba(0, 0, 0, 0.25), rgba(0, 0, 0, 0.25) ), url("/static/finsta-landing.jpg");
     background-size: cover;
     background-position: center center;
     background-repeat: no-repeat;
