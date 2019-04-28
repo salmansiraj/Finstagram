@@ -120,7 +120,6 @@ def images():
     cursor.execute(likesQuery)
     likes = cursor.fetchall()
     cursor.close()
-    print(likes)
 
     return render_template("images.html", photos=data, taggedUsers=taggedUsers, comments=comments, likes=likes)
 
@@ -315,8 +314,9 @@ def registerAuth():
 
         return redirect(url_for("login"))
 
-    error = "An error has occurred. Please try again."
-    return render_template("register.html", error=error)
+    else:
+        error = "An error has occurred. Please try again."
+        return render_template("register.html", error=error)
 
 @app.route("/updateInfo", methods=["POST"])
 def updateInfo():
