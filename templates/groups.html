@@ -1,22 +1,27 @@
 <html>
     <head>
+        <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+        <link href="https://fonts.googleapis.com/css?family=Fira+Sans" rel="stylesheet">
+        <link href="https://fonts.googleapis.com/css?family=Cookie" rel="stylesheet">
+        <link href="https://fonts.googleapis.com/css?family=Roboto+Condensed" rel="stylesheet">
+        <link rel="stylesheet" type="text/css" href="static/home.css">
         <title>CloseFriendsGroup</title>
     </head>
     <body>
-        <h1> Create a Close Friends Group! </h1>
+        <h1 class="title"> Create a Close Friends Group! </h1>
         <div>
-            <h2> Create a New Group </h2>
+            <h3> Create a New Group </h3>
             <form action="/createGroup" method="post">
                 <input type="text" name="groupName" placeholder="Group Name" required/><br/>
                 <input type="submit" value="Create">
             </form><br/>
-            <h2> Add a Member to a Group </h2>
+            <h3> Add a Member to a Group </h3>
             <form action="/addMember" method="post">
                 <input type="text" name="groupName" placeholder="Group Name" required/><br/>
                 <input type="text" name="newMember" placeholder="Username" required/><br/>
                 <input type="submit" value="Add to Group">
             </form><br />
-            <h2> List of Owned Groups </h2>
+            <h3> List of Owned Groups </h3>
             <ul>
                 {% for group in groups %}
                 <li>
