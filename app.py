@@ -453,11 +453,27 @@ def addMember():
 
 @app.route("/searchForUser", methods=["POST"])
 def searchForUser():
+    user = session['username']
     if request.form:
         requestData = request.form
         searchedUser = requestData["searchedUser"]
         try:
             with connection.cursor() as cursor:
+                check = "SELECT * FROM Follow WHERE followeeUsername=%s AND followerUsername=%s AND acceptedFollow=1"
+                cursor.execute(check, (searchedUser, user))
+                checkData = cursor.fetchone()
+
+                check2 = "SELECT * FROM Person WHERE username=%s AND isPrivate=1"
+                cursor.execute(check2, (searchedUser))
+                check2Data = cursor.fetchone()
+
+                if (check2Data):
+                    print('there')
+                    if not checkData:
+                        message = "You cannot view searched user's photos"
+                        return render_template("home.html", message=message, username=session["username"])
+
+                print('here')
                 query1 = "SELECT filePath, photoID, timestamp, caption, photoOwner FROM Photo WHERE photoOwner=%s"
                 cursor.execute(query1, (searchedUser))
                 data = cursor.fetchall()
@@ -466,8 +482,8 @@ def searchForUser():
                 cursor.execute(taggedquery)
                 taggedUsers = cursor.fetchall()
                 cursor.close()
-
                 return render_template("specificUser.html", username=session["username"], posts=data)
+
         except pymysql.err.IntegrityError:
             message = "Searched user does not exist. Please try again."
             return render_template("home.html", message=message, username=session["username"])
