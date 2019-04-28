@@ -344,8 +344,9 @@ def registerAuth():
 
         return redirect(url_for("login"))
 
-    error = "An error has occurred. Please try again."
-    return render_template("register.html", error=error)
+    else:
+        error = "An error has occurred. Please try again."
+        return render_template("register.html", error=error)
 
 # Extra Feature: Update user settings
 @app.route("/updateInfo", methods=["POST"])

@@ -1,6 +1,11 @@
 <!DOCTYPE html>
 <html>
     <head>
+        <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+        <link href="https://fonts.googleapis.com/css?family=Fira+Sans" rel="stylesheet">
+        <link href="https://fonts.googleapis.com/css?family=Cookie" rel="stylesheet">
+        <link href="https://fonts.googleapis.com/css?family=Roboto+Condensed" rel="stylesheet">
+        <link rel="stylesheet" type="text/css" href="static/home.css">
         <title>Finstagram</title>
     </head>
     <body>
@@ -33,7 +38,7 @@
             {{ message }}
         {% endif %}
 
-        <h2>People that requested to follow you</h2>
+        <h2>People who requested to follow you</h2>
         <ul>
         {% for follower in requests %}
             <li>{{follower.followerUsername}}</li>
