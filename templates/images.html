@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <html>
     <head>
         <meta charset="UTF-8">
@@ -17,6 +18,20 @@
             <input type="text" name="getphoto" /><br>
             <input type="submit" name="submit_button">
         </form>
+
+        {% for photo in currPhoto %}
+            <img src="/image/{{photo.filePath}}" width='300'><br>
+            <h4> {{photo.photoOwner}}, {{photo.photoID}} </h4>
+            <p> {{photo.caption}} </p>
+            <h3> taggedUsers: </h3>
+            {% for taggedImage in taggedUsers %}
+                {% if taggedImage.photoID == photo.photoID %}
+                    {% if taggedImage.acceptedTag %}
+                        <h5> {{ taggedImage.lname }} </h5>
+                    {% endif %}
+                {% endif %}
+            {% endfor %}
+        {% endfor %}
 
         <div>
             {% for image in photos %}

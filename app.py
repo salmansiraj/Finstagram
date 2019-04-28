@@ -27,11 +27,39 @@ def login_required(f):
         return f(*args, **kwargs)
     return dec
 
+@app.route("/image/<image_name>", methods=["GET"])
+def image(image_name):
+    image_location = os.path.join(IMAGES_DIR, image_name)
+    if os.path.isfile(image_location):
+        return send_file(image_location, mimetype="image/jpg")
+
 @app.route("/")
 def index():
     if "username" in session:
         return redirect(url_for("home"))
     return render_template("index.html")
+
+@app.route("/login", methods=["GET"])
+def login():
+    return render_template("login.html")
+
+@app.route("/logout", methods=["GET"])
+def logout():
+    session.pop("username")
+    return redirect("/")
+
+@app.route("/register", methods=["GET"])
+def register():
+    return render_template("register.html")
+
+@app.route("/settings", methods=["GET"])
+def settings():
+    return render_template("settings.html")
+
+@app.route("/upload", methods=["GET"])
+@login_required
+def upload():
+    return render_template("upload.html")
 
 @app.route("/home")
 @login_required
@@ -44,12 +72,6 @@ def home():
     # print(requests)
 
     return render_template("home.html", username=session["username"], requests=requests)
-
-@app.route("/upload", methods=["GET"])
-@login_required
-def upload():
-    return render_template("upload.html")
-
 
 @app.route("/notifications", methods=["GET"])
 @login_required
@@ -66,31 +88,36 @@ def notifications():
     data = cursor.fetchall()
     return render_template("notifications.html", taggedNotifications=data, followerRequests=followerRequests)
 
-
 # AllFollowers: True
 #     - (Your followers) + (all members in groups you own can see) + (YOU)
 # AllFollowers: False
 #     - (YOU) + (all members in groups you own can see)
 
+# Required Feature #1: View visible photos and info about them
 @app.route("/images", methods=["GET", "POST"])
 @login_required
 def images():
     user = session["username"]
+
+    # Query for photos of the people you follow
     cursor = connection.cursor()
     queryFollow = "CREATE VIEW myfollows AS SELECT DISTINCT filePath, photoID, timestamp, caption, photoOwner FROM Photo JOIN Follow ON (Photo.photoOwner=followeeUsername) WHERE followerUsername=%s AND allFollowers=%s"
     cursor.execute(queryFollow, (user, 1))
     cursor.close()
 
+    # Query for photos of the people of the close friend groups that you are in
     cursor = connection.cursor()
     queryGroups = "CREATE VIEW mygroups AS SELECT DISTINCT filePath, photoID, timestamp, caption, photoOwner FROM Photo NATURAL JOIN Belong WHERE Belong.username=%s"
     cursor.execute(queryGroups, (user))
     cursor.close()
 
+    # Query for photos that the user posted
     cursor = connection.cursor()
     querySelf = "CREATE VIEW myphotos AS SELECT filePath, photoID, timestamp, caption, photoOwner FROM Photo WHERE photoOwner=%s"
     cursor.execute(querySelf, (user))
     cursor.close()
 
+    # Query that unions the three separate views and returns distinct photos
     cursor = connection.cursor()
     totalQuery = "SELECT DISTINCT photoID, timestamp, filePath, caption, photoOwner FROM mygroups UNION (SELECT photoID,timestamp,filePath, caption, photoOwner FROM myphotos) UNION (SELECT photoID,timestamp,filePath, caption, photoOwner FROM myfollows) ORDER BY timestamp DESC"
     cursor.execute(totalQuery)
@@ -98,23 +125,27 @@ def images():
     # print(data)
     cursor.close()
 
+    # Query that drops the created views
     cursor = connection.cursor()
     query = "DROP VIEW myphotos, mygroups, myfollows"
     cursor.execute(query)
     cursor.close()
 
+    # Query for getting all the tagged users of the photos
     cursor = connection.cursor()
     taggedquery = "SELECT * FROM Tag JOIN Photo ON (Tag.photoID = Photo.photoID) NATURAL JOIN Person"
     cursor.execute(taggedquery)
     taggedUsers = cursor.fetchall()
     cursor.close()
 
+    # Query for getting comments of photos
     cursor = connection.cursor()
     commentsQuery = "SELECT username, photoID, commentText FROM Comment"
     cursor.execute(commentsQuery)
     comments = cursor.fetchall()
     cursor.close()
 
+    # Query for getting likes of photos
     cursor = connection.cursor()
     likesQuery = "SELECT username, photoID FROM Liked"
     cursor.execute(likesQuery)
@@ -123,9 +154,13 @@ def images():
 
     return render_template("images.html", photos=data, taggedUsers=taggedUsers, comments=comments, likes=likes)
 
+# Required Feature #6: Add friend
+# Responsible for getting information from the database to show the close friend groups of a user
 @app.route("/groups", methods=["GET"])
+@login_required
 def groups():
     groupOwner = session["username"]
+    # Queries that check the close friend groups the user owns or belongs to
     query1 = "SELECT * FROM CloseFriendGroup WHERE groupOwner=%s"
     query2 = "SELECT * FROM Belong WHERE groupOwner=%s"
 
@@ -138,7 +173,9 @@ def groups():
     # print(data2)
     return render_template("groups.html", groups=data1, users=data2, username=session["username"])
 
+# Required Feature #5: Tag a photo
 @app.route("/tagAUser", methods=["GET","POST"])
+@login_required
 def tagAUser():
     if request.form:
         requestData = request.form
@@ -159,6 +196,7 @@ def tagAUser():
             if (taggedUser != ""):
                 try:
                     with connection.cursor() as cursor:
+                        # Same queries used to find the photos that can be viewed by the person being tagged
                         queryFollow = "CREATE VIEW myfollows AS SELECT DISTINCT filePath, photoID, timestamp, caption, photoOwner FROM Photo JOIN Follow ON (Photo.photoOwner=followeeUsername) WHERE followerUsername=%s AND allFollowers=%s"
                         queryGroups = "CREATE VIEW mygroups AS SELECT DISTINCT filePath, photoID, timestamp, caption, photoOwner FROM Photo NATURAL JOIN Belong WHERE Belong.username=%s"
                         querySelf = "CREATE VIEW myphotos AS SELECT filePath, photoID, timestamp, caption, photoOwner FROM Photo WHERE photoOwner=%s"
@@ -172,15 +210,18 @@ def tagAUser():
                             cursor.execute(totalQuery)
                             data = cursor.fetchone()
                             cursor.execute(query)
+                            # if the tagge cannot view the photo
                             if not data:
                                 message = "Photo isn't visible to the taggee"
                                 return render_template("images.html", message=message, username=session["username"])
                             cursor.execute(check, (photoID, taggee))
                             data2 = cursor.fetchone()
+                            # if the tagge has already been tagged in the photo
                             if data2:
                                 message = "Taggee has already been tagged"
                                 return render_template("images.html", message=message, username=session["username"])
 
+                            # else, insert a row into the Tage table with the taggee
                             query2 = "INSERT INTO Tag (username, photoID, acceptedTag) VALUES (%s, %s, %r)"
                             query3 = "SELECT username FROM Belong WHERE groupOwner = %s AND username = %s"
                             if (taggee==user):
@@ -197,43 +238,50 @@ def tagAUser():
             error = "Failed to tag user."
         return redirect(url_for("images"))
 
-    # return render_template("images.html", error=error, username=session["username"])
-
+#Extra Feature #10: Search by tag
 @app.route("/searchPhoto", methods=["POST"])
+@login_required
 def searchPhoto():
     user = session["username"]
     searchPhoto = request.form["getphoto"]
 
+    # Query for photos of the people you follow
     cursor = connection.cursor()
     queryFollow = "CREATE VIEW myfollows AS SELECT DISTINCT filePath, photoID, timestamp, caption, photoOwner FROM Photo JOIN Follow ON (Photo.photoOwner=followeeUsername) WHERE followerUsername=%s AND allFollowers=%s"
     cursor.execute(queryFollow, (user, 1))
     cursor.close()
 
+    # Query for photos of the people of the close friend groups that you are in
     cursor = connection.cursor()
     queryGroups = "CREATE VIEW mygroups AS SELECT DISTINCT filePath, photoID, timestamp, caption, photoOwner FROM Photo NATURAL JOIN Belong WHERE Belong.username=%s"
     cursor.execute(queryGroups, (user))
     cursor.close()
 
+    # Query for photos that the user posted
     cursor = connection.cursor()
     querySelf = "CREATE VIEW myphotos AS SELECT filePath, photoID, timestamp, caption, photoOwner FROM Photo WHERE photoOwner=%s"
     cursor.execute(querySelf, (user))
     cursor.close()
 
+    # Query that unions the three separate views and returns distinct photos
     cursor = connection.cursor()
     totalQuery = "CREATE VIEW gallery AS SELECT DISTINCT photoID, timestamp, filePath, caption, photoOwner FROM mygroups UNION (SELECT photoID,timestamp,filePath, caption, photoOwner FROM myphotos) UNION (SELECT photoID,timestamp,filePath, caption, photoOwner FROM myfollows) ORDER BY timestamp DESC"
     cursor.execute(totalQuery)
     cursor.close()
 
+    #Query that matches the photoId with the searched photo
     cursor = connection.cursor()
     searchQuery = "SELECT * FROM gallery WHERE photoID=%s"
     cursor.execute(searchQuery, (searchPhoto))
     data = cursor.fetchall()
 
+    # Query that drops the created views
     cursor = connection.cursor()
     query = "DROP VIEW myphotos, mygroups, myfollows, gallery"
     cursor.execute(query)
     cursor.close()
 
+    # Query for photos of the people you follow
     cursor = connection.cursor()
     taggedquery = "SELECT * FROM Tag JOIN Photo ON (Tag.photoID = Photo.photoID) NATURAL JOIN Person"
     cursor.execute(taggedquery)
@@ -242,26 +290,7 @@ def searchPhoto():
 
     return render_template("images.html", username=session["username"], currPhoto=data, taggedUsers=taggedUsers)
 
-
-@app.route("/image/<image_name>", methods=["GET"])
-def image(image_name):
-    image_location = os.path.join(IMAGES_DIR, image_name)
-    if os.path.isfile(image_location):
-        return send_file(image_location, mimetype="image/jpg")
-
-@app.route("/login", methods=["GET"])
-def login():
-    return render_template("login.html")
-
-@app.route("/register", methods=["GET"])
-def register():
-    return render_template("register.html")
-
-@app.route("/settings", methods=["GET"])
-def settings():
-    return render_template("settings.html")
-
-
+# Login Authentification
 @app.route("/loginAuth", methods=["POST"])
 def loginAuth():
     if request.form:
@@ -284,6 +313,7 @@ def loginAuth():
     error = "An unknown error has occurred. Please try again."
     return render_template("login.html", error=error)
 
+# Register Authentification
 @app.route("/registerAuth", methods=["POST"])
 def registerAuth():
     if request.files:
@@ -318,25 +348,28 @@ def registerAuth():
         error = "An error has occurred. Please try again."
         return render_template("register.html", error=error)
 
+# Extra Feature: Update user settings
 @app.route("/updateInfo", methods=["POST"])
+@login_required
 def updateInfo():
-    if request.files:
-        image_file = request.files.get("profilePic", "")
-        image_name = image_file.filename
-        filepath = os.path.join(IMAGES_DIR, image_name)
-        image_file.save(filepath)
-
+    if request.form:
+        if request.files:
+            image_file = request.files.get("profilePic", "")
+            image_name = image_file.filename
+            filepath = os.path.join(IMAGES_DIR, image_name)
+            image_file.save(filepath)
+        else:
+            image_name = "default_image.jpg"
         username=session["username"]
         requestData = request.form
         plaintextPasword = requestData["password"]
         confirmPassword = requestData["confirmPassword"]
+        # Checks if the new password and confirm password entered by the user, matches
         if (plaintextPasword==confirmPassword):
             hashedPassword = hashlib.sha256(plaintextPasword.encode("utf-8")).hexdigest()
         else:
             error = "Passwords do not match! Try again!"
             return render_template("settings.html", error=error)
-        # firstName = requestData["fname"]
-        # lastName = requestData["lname"]
         bio = requestData["bio"]
         private = requestData["private"]
         if (private=="yes"):
@@ -344,6 +377,7 @@ def updateInfo():
         else:
             private = 0
         with connection.cursor() as cursor:
+            # Update query that changes the row in the table of the current user
             query = "UPDATE person SET password=%s, avatar=%s, bio=%s, isPrivate=%r WHERE username=%s"
             cursor.execute(query, (hashedPassword, image_name, bio, private, username))
 
@@ -352,11 +386,7 @@ def updateInfo():
     error = "An error has occurred. Please try again."
     return render_template("settings.html", error=error)
 
-@app.route("/logout", methods=["GET"])
-def logout():
-    session.pop("username")
-    return redirect("/")
-
+# Required Feature #2: Post a photo
 @app.route("/uploadImage", methods=["GET", "POST"])
 @login_required
 def upload_image():
@@ -377,6 +407,7 @@ def upload_image():
             allFollowers = True
         else:
             allFollowers = False
+        # Query that inserts the new photo being uploaded into the Photo table
         query1 = "INSERT INTO photo (timestamp, filePath, caption, allFollowers, photoOwner) VALUES (%s, %s, %s, %s, %s)"
 
         with connection.cursor() as cursor1:
@@ -387,21 +418,17 @@ def upload_image():
     error = "Failed to upload image."
     return render_template("upload.html", error=error, username=session["username"])
 
-
+# Required Feature #4: Manage tag requests
 @app.route("/taggedStatus", methods=["POST"])
 @login_required
 def taggedStatus():
     if request.form:
-        # print(request.form['status'])
-        # print(request.form['submit_button'])
         getQuery = "SELECT photoID FROM TAG WHERE (username=%s AND acceptedTag=%s)"
         with connection.cursor() as cursor:
             cursor.execute(getQuery, (session["username"], 0))
         data = cursor.fetchall()
-        # print(data)
         currUser = session["username"]
         for photo in data:
-            # print('status' + str(photo['photoID']))
             currStatus = request.form.get('status' + str(photo['photoID']))
             if (currStatus == "accept"):
                 statusFlag = True
@@ -416,13 +443,16 @@ def taggedStatus():
                 continue
     return redirect(url_for('notifications'))
 
-
+# Required Feature #6: Add friend
+# Used for creating a new close friend group
 @app.route("/createGroup", methods=["POST"])
+@login_required
 def createGroup():
     if request.form:
         requestData = request.form
         groupName = requestData["groupName"]
         groupOwner = session["username"]
+        # Query used to create a new close friend group
         query = "INSERT INTO CloseFriendGroup (groupName, groupOwner) VALUES (%s, %s)"
         with connection.cursor() as cursor:
             cursor.execute(query, (groupName, groupOwner))
@@ -432,7 +462,10 @@ def createGroup():
         message = "Failed to create CloseFriendGroup."
         return render_template("groups.html", message=message, username=session["username"])
 
+# Required Feature #6: Add friend
+# Used for adding a new member to a close friend group
 @app.route("/addMember", methods=["POST"])
+@login_required
 def addMember():
     if request.form:
         requestData = request.form
@@ -440,6 +473,7 @@ def addMember():
         newMember = requestData["newMember"]
         owner = session["username"]
         try:
+            # Query for adding a new member to a close friend group
             query = "INSERT INTO Belong (groupName, groupOwner, username) VALUES (%s, %s, %s)"
             with connection.cursor() as cursor:
                 cursor.execute(query, (groupName, owner, newMember))
@@ -451,46 +485,58 @@ def addMember():
         message = "Failed to add " + newMember + " to " + groupName
         return render_template("groups.html", message=message, username=session["username"])
 
+# Extra Feature #11: Search by Poster
 @app.route("/searchForUser", methods=["POST"])
+@login_required
 def searchForUser():
     user = session['username']
     if request.form:
         requestData = request.form
         searchedUser = requestData["searchedUser"]
-        try:
-            with connection.cursor() as cursor:
-                check = "SELECT * FROM Follow WHERE followeeUsername=%s AND followerUsername=%s AND acceptedFollow=1"
-                cursor.execute(check, (searchedUser, user))
-                checkData = cursor.fetchone()
+        with connection.cursor() as cursor:
+            # Query to check if the current user follows the searched user
+            check = "SELECT * FROM Follow WHERE followeeUsername=%s AND followerUsername=%s AND acceptedFollow=1"
+            cursor.execute(check, (searchedUser, user))
+            checkData = cursor.fetchone()
 
-                check2 = "SELECT * FROM Person WHERE username=%s AND isPrivate=1"
-                cursor.execute(check2, (searchedUser))
-                check2Data = cursor.fetchone()
+            # Query to check if the searched user is a private account
+            check2 = "SELECT * FROM Person WHERE username=%s AND isPrivate=1"
+            cursor.execute(check2, (searchedUser))
+            check2Data = cursor.fetchone()
 
+            # Query to check if the searched user exists
+            exists = "SELECT * FROM Person WHERE username=%s"
+            cursor.execute(exists, (searchedUser))
+            existData = cursor.fetchone()
+
+            if existData:
                 if (check2Data):
-                    print('there')
                     if not checkData:
                         message = "You cannot view searched user's photos"
                         return render_template("home.html", message=message, username=session["username"])
 
-                print('here')
+                # If the checks are satisfied, then display the searched user's images
                 query1 = "SELECT filePath, photoID, timestamp, caption, photoOwner FROM Photo WHERE photoOwner=%s"
                 cursor.execute(query1, (searchedUser))
                 data = cursor.fetchall()
 
+                # Query that gets the tagged users of the photos
                 taggedquery = "SELECT * FROM Tag JOIN Photo ON (Tag.photoID = Photo.photoID) NATURAL JOIN Person"
                 cursor.execute(taggedquery)
                 taggedUsers = cursor.fetchall()
                 cursor.close()
-                return render_template("specificUser.html", username=session["username"], posts=data)
+                return render_template("specificUser.html", username=session["username"], posts=data, taggedUsers=taggedUsers, searchedUser=searchedUser)
 
-        except pymysql.err.IntegrityError:
             message = "Searched user does not exist. Please try again."
             return render_template("home.html", message=message, username=session["username"])
+
     message = "Failed to search for user."
     return render_template("home.html", message=message, username=session["username"])
 
+# Required Feature #3: Manage Follows
+# Used to follow a user
 @app.route("/follow", methods=["POST"])
+@login_required
 def follow():
     if request.form:
         requestData = request.form
@@ -499,6 +545,7 @@ def follow():
         acceptedFollow = 0
 
         try:
+            # Query for when the user tries to follow some other user
             query = "INSERT INTO Follow (followerUsername, followeeUsername, acceptedFollow) VALUES (%s, %s, %s)"
             with connection.cursor() as cursor:
                 if follower != followee:
@@ -512,13 +559,17 @@ def follow():
     else:
         return render_template("home.html", username=session["username"])
 
+# Required Feature #3: Manage Follows
+# Used to unfollow a user
 @app.route("/unfollow", methods=["POST"])
+@login_required
 def unfollow():
     if request.form:
         requestData = request.form
         unfollowee = requestData["unfollowee"]
         follower = session["username"]
         try:
+            # Query used to remove the follow from the Follow table
             deleteQuery = "DELETE FROM Follow WHERE followeeUsername=%s AND followerUsername=%s"
             with connection.cursor() as cursor:
                 cursor.execute(deleteQuery, (unfollowee, follower))
@@ -529,7 +580,10 @@ def unfollow():
     else:
         return render_template("followers.html", message=message, username=session["username"])
 
+# Required Feature #3: Manage Follows
+# Helps display the followed and following users
 @app.route("/followers", methods=["GET"])
+@login_required
 def displayFollowers():
     user = session["username"]
     query1 = "SELECT followerUsername FROM Follow WHERE followeeUsername=%s AND acceptedfollow=%s"
@@ -544,7 +598,8 @@ def displayFollowers():
     # print(data2)
     return render_template("followers.html", followers=followers, following=following, username=session["username"])
 
-
+# Required Feature #3: Manage Follows
+# Helps manage the unfollow and follow status
 @app.route("/followStatus", methods=["POST"])
 @login_required
 def followStatus():
@@ -558,16 +613,18 @@ def followStatus():
         for follower in data:
             currStatus = request.form["status" + follower["followerUsername"]]
             if currStatus == "accept":
+                # If user chooses to accept a follow request, update the acceptedFollow
                 updateQuery = "UPDATE Follow SET acceptedFollow=%s WHERE followeeUsername=%s"
                 with connection.cursor() as cursor:
                     cursor.execute(updateQuery, (1, followee))
             else:
+                # If the user choose to decline the follow request, delete the follow
                 deleteQ = "DELETE FROM Follow WHERE followerUsername=%s"
                 with connection.cursor() as cursor:
                     cursor.execute(deleteQ, (follower["followerUsername"]))
     return render_template("notifications.html", username=session["username"])
 
-
+# Extra Feature #8: Like Photo
 @app.route("/like", methods=["POST"])
 @login_required
 def like():
@@ -583,6 +640,7 @@ def like():
     else:
         return render_template("images.html", username=session["username"])
 
+# Extra Feature #7: Add comments
 @app.route("/comment", methods=["POST"])
 @login_required
 def comment():
@@ -597,9 +655,6 @@ def comment():
         return render_template("images.html", username=session["username"])
     else:
         return render_template("images.html", username=session["username"])
-
-
-
 
 if __name__ == "__main__":
     if not os.path.isdir("images"):
