@@ -11,7 +11,7 @@
         <h2> Search for Photo </h2>
         <form action="/searchPhoto" method="post">
             <input type="text" name="getphoto" /><br>
-            <input type="submit" name="submit_button">
+            <button type="submit" name="submit_button">Tag</button>
         </form>
         {% for photo in currPhoto %}
             <img src="/image/{{photo.filePath}}" width='300'><br>
@@ -25,6 +25,11 @@
                     {% endif %}
                 {% endif %}
             {% endfor %}
+            <!-- <h3> Tag a User:asdasdasd </h3>
+            <form action="/tagAUser" method="post" enctype="multipart/form-data">
+              <input type="text" name="tagUser{{photo.photoID}}" /><br>
+              <input type="submit" value="Submit">
+            </form> -->
         {% endfor %}
         <div>
             {% for image in photos %}
@@ -57,6 +62,12 @@
                             {% endif %}
                         {% endif %}
                     {% endfor %}
+
+                    <h3> Tag a User: </h3>
+                    <form action="/tagAUser" method="post" enctype="multipart/form-data">
+                      <input type="text" name="tagUser{{image.photoID}}" /><br>
+                      <input type="submit" value="submit_button">
+                    </form>
                 </ul>
 
 
@@ -75,13 +86,13 @@
                     <button type="submit" value="{{image.photoID}}" name="commentID">Post</button>
                 </form>
                 <hr>
+
             {% endfor %}
         </div>
-        
+
         {% if message %}
             {{ message }}
         {% endif %}
         <a href="/">Go back</a>
     </body>
-
 </html>

@@ -1,0 +1,41 @@
+<html>
+    <head>
+        <title>Finstagram</title>
+    </head>
+    <body>
+        <h1>Image Gallery</h1>
+        {% for photo in posts %}
+            <img src="/image/{{photo.filePath}}" width='300'><br>
+            <h4> {{photo.photoOwner}}, {{photo.photoID}} </h4>
+            <p> {{photo.caption}} </p>
+            <h3> taggedUsers: </h3>
+            {% for taggedImage in taggedUsers %}
+                {% if taggedImage.photoID == photo.photoID %}
+                    {% if taggedImage.acceptedTag %}
+                        <h5> {{ taggedImage.lname }} </h5>
+                    {% endif %}
+                {% endif %}
+            {% endfor %}
+        {% endfor %}
+        <div>
+            {% for image in photos %}
+                    <img src="/image/{{image.filePath}}" width='300'><br>
+                    <h4> {{image.photoOwner}}, {{image.photoID}} </h4>
+                    <p> {{image.caption}} </p>
+                <h3> taggedUsers: </h3>
+                    {% for taggedImage in taggedUsers %}
+                        {% if taggedImage.photoID == image.photoID %}
+                            {% if taggedImage.acceptedTag %}
+                                <h5> {{ taggedImage.lname }} </h5>
+                            {% endif %}
+                        {% endif %}
+                    {% endfor %}
+            {% endfor %}
+        </div>
+
+        {% if message %}
+            {{ message }}
+        {% endif %}
+        <a href="/">Go back</a>
+    </body>
+</html>
