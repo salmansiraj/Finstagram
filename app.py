@@ -482,7 +482,7 @@ def searchForUser():
                 cursor.execute(taggedquery)
                 taggedUsers = cursor.fetchall()
                 cursor.close()
-                return render_template("specificUser.html", username=session["username"], posts=data)
+                return render_template("specificUser.html", username=session["username"], posts=data, taggedUsers=taggedUsers)
 
         except pymysql.err.IntegrityError:
             message = "Searched user does not exist. Please try again."
