@@ -185,7 +185,6 @@ def tagAUser():
         for name in requestData:
             photoID = name.strip("tagUser")
             taggedUser = requestData[name]
-            print(name, taggedUser, photoID, 'print here')
         if (len(taggedUser) != 0):
             taggedUser = taggedUser.split(',')
         else:
@@ -274,6 +273,20 @@ def searchPhoto():
     searchQuery = "SELECT * FROM gallery WHERE photoID=%s"
     cursor.execute(searchQuery, (searchPhoto))
     data = cursor.fetchall()
+    if len(data) == 0:
+        cursor = connection.cursor()
+        query = "DROP VIEW myphotos, mygroups, myfollows, gallery"
+        cursor.execute(query)
+        cursor.close()
+
+        # Query for photos of the people you follow
+        cursor = connection.cursor()
+        taggedquery = "SELECT * FROM Tag JOIN Photo ON (Tag.photoID = Photo.photoID) NATURAL JOIN Person"
+        cursor.execute(taggedquery)
+        taggedUsers = cursor.fetchall()
+        cursor.close()
+        message = "Photo you are searching for was not found"
+        return render_template("images.html", username=session["username"], message=message)
 
     # Query that drops the created views
     cursor = connection.cursor()
@@ -287,8 +300,8 @@ def searchPhoto():
     cursor.execute(taggedquery)
     taggedUsers = cursor.fetchall()
     cursor.close()
-
     return render_template("images.html", username=session["username"], currPhoto=data, taggedUsers=taggedUsers)
+
 
 # Login Authentification
 @app.route("/loginAuth", methods=["POST"])
@@ -632,13 +645,20 @@ def like():
         requestData = request.form
         liker = session["username"]
         photoID = requestData["likeID"]
-        query = "INSERT INTO Liked (username, photoID, timestamp) VALUES (%s, %s, %s)"
-        with connection.cursor() as cursor:
-            cursor.execute(query, (liker, photoID, time.strftime('%Y-%m-%d %H:%M:%S')))
-
-        return render_template("images.html", username=session["username"])
-    else:
-        return render_template("images.html", username=session["username"])
+        try:
+            query = "INSERT INTO Liked (username, photoID, timestamp) VALUES (%s, %s, %s)"
+            # exists = "SELECT * FROM Like WHERE username=%s"
+            with connection.cursor() as cursor:
+                cursor.execute(query, (liker, photoID, time.strftime('%Y-%m-%d %H:%M:%S')))
+        #         cursor.execute(exists, (liker))
+        # existData = cursor.fetchone()
+        # if (existData):
+            return redirect(url_for('images'))
+        # else:
+        except:
+            message = "Unable to or already liked photo"
+            return render_template("images.html", username=session["username"], message=message)
+    return render_template("images.html", username=session["username"])
 
 # Extra Feature #7: Add comments
 @app.route("/comment", methods=["POST"])

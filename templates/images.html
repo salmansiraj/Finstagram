@@ -16,9 +16,9 @@
         <h2> Search for Photo </h2>
         <form action="/searchPhoto" method="post">
             <input type="text" name="getphoto" /><br>
-            <input type="submit" name="submit_button">
+            <input type="submit" name="search">
         </form>
-
+        
         {% for photo in currPhoto %}
             <img src="/image/{{photo.filePath}}" width='300'><br>
             <h4> {{photo.photoOwner}}, {{photo.photoID}} </h4>
