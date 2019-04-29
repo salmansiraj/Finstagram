@@ -525,7 +525,11 @@ def searchForUser():
                 cursor.execute(taggedquery)
                 taggedUsers = cursor.fetchall()
                 cursor.close()
+<<<<<<< HEAD
+                return render_template("specificUser.html", username=session["username"], posts=data, taggedUsers=taggedUsers)
+=======
                 return render_template("specificUser.html", username=session["username"], posts=data, taggedUsers=taggedUsers, searchedUser=searchedUser)
+>>>>>>> 970d10d8991ec0b689e6aaec073752da4b75802a
 
             message = "Searched user does not exist. Please try again."
             return render_template("home.html", message=message, username=session["username"])
