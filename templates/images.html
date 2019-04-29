@@ -16,7 +16,10 @@
         <h2> Search for Photo </h2>
         <form action="/searchPhoto" method="post">
             <input type="text" name="getphoto" /><br>
+
+            <button type="submit" name="submit_button">Search</button>
             <input type="submit" name="search">
+
         </form>
         
         {% for photo in currPhoto %}
