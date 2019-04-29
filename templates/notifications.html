@@ -1,14 +1,19 @@
+<!DOCTYPE html>
 <html>
     <head>
+        <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+        <link href="https://fonts.googleapis.com/css?family=Fira+Sans" rel="stylesheet">
+        <link href="https://fonts.googleapis.com/css?family=Cookie" rel="stylesheet">
+        <link href="https://fonts.googleapis.com/css?family=Roboto+Condensed" rel="stylesheet">
+        <link rel="stylesheet" type="text/css" href="static/notifications.css">
         <title>Notifications</title>
     </head>
     <body>
         <h1>Notifications</h1>
         <div>
+            <h4>Follow Requests</h4>
             <form action="/followStatus" method="post" enctype="multipart/form-data">
                 <ul>
-                    <h2>Follow Requests</h2>
-
                     {% for follower in followerRequests %}
                     <li>
                         {{follower.followerUsername}} has requested to follow you!<br/>
@@ -20,14 +25,15 @@
                 </ul>
            </form>
 
+             <h4>Tag Requests</h4>
             <form action="/taggedStatus" method="post">
-                    <h2>Tag Requests</h2>
+                <ul>
                     {% for notification in taggedNotifications %}
                     <li>
                         {{notification.photoOwner}} has tagged you in a photo ({{notification.photoID}})<br/>
-                        <input type="radio" name="status{{notification.photoID}}" value="accept"> Accept 
-                        <input type="radio" name="status{{notification.photoID}}" value="decline"> Decline 
-                    </li> 
+                        <input type="radio" name="status{{notification.photoID}}" value="accept"> Accept
+                        <input type="radio" name="status{{notification.photoID}}" value="decline"> Decline
+                    </li>
                     {% endfor %}
                     <br/><input type="submit" name="submit_button2">
                 </ul>

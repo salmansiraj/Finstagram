@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <html>
     <head>
         <meta charset="UTF-8">
@@ -15,7 +16,7 @@
             <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
-            
+
             <div class="collapse navbar-collapse" id="navbarSupportedContent">
                 <ul class="navbar-nav ml-auto">
                     <li class="nav-item">
@@ -43,7 +44,7 @@
                 <br/></p>
                 <p class="outside">
                   AVATAR:
-                <button class="btn btn-outline-light" type="file" name="profilePic" accept="image/*">UPLOAD IMAGE</button><br/>
+                <input class="btn btn-outline-light" type="file" name="profilePic" accept="image/*"><br/>
                 </p>
                 <p>
                 <textarea class="formBox" name="bio" placeholder="Insert bio..."></textarea>
@@ -60,7 +61,7 @@
             {{ error }}
             {% endif %}
         </section>
-                
+
 
     </body>
 </html>
