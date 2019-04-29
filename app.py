@@ -525,11 +525,7 @@ def searchForUser():
                 cursor.execute(taggedquery)
                 taggedUsers = cursor.fetchall()
                 cursor.close()
-<<<<<<< HEAD
-                return render_template("specificUser.html", username=session["username"], posts=data, taggedUsers=taggedUsers)
-=======
                 return render_template("specificUser.html", username=session["username"], posts=data, taggedUsers=taggedUsers, searchedUser=searchedUser)
->>>>>>> 970d10d8991ec0b689e6aaec073752da4b75802a
 
             message = "Searched user does not exist. Please try again."
             return render_template("home.html", message=message, username=session["username"])
@@ -576,13 +572,16 @@ def unfollow():
             # Query used to remove the follow from the Follow table
             deleteQuery = "DELETE FROM Follow WHERE followeeUsername=%s AND followerUsername=%s"
             with connection.cursor() as cursor:
-                cursor.execute(deleteQuery, (unfollowee, follower))
+                if unfollowee != follower:
+                    cursor.execute(deleteQuery, (unfollowee, follower))
+                    message = "Unfollowed " + unfollowee        
+                else:
+                    message = "You can't unfollow yourself!"    
         except:
-            # error message still not right -- will leave like this for now
-            message = "Unfollowed " + unfollowee
+            message = "Failed to unfollow " + unfollowee            
         return render_template("followers.html", message=message, username=session["username"])
     else:
-        return render_template("followers.html", message=message, username=session["username"])
+        return render_template("followers.html", username=session["username"])
 
 # Required Feature #3: Manage Follows
 # Helps display the followed and following users
