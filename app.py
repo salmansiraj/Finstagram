@@ -237,7 +237,7 @@ def tagAUser():
             error = "Failed to tag user."
         return redirect(url_for("images"))
 
-#Extra Feature #10: Search by tag
+#Extra Feature #10: Search by photo (knowing photoID)
 @app.route("/searchPhoto", methods=["POST"])
 @login_required
 def searchPhoto():
